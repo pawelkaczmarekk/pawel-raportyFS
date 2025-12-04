@@ -24,6 +24,9 @@ function parseHTMLContent(html: string): ContentBlock[] {
 
   // Clean up the HTML
   let content = html
+    // Remove markdown code block markers (```html, ```, etc.)
+    .replace(/```\w*\s*/gi, '')
+    .replace(/```/g, '')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
