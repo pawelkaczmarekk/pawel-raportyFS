@@ -80,6 +80,36 @@ export function generateMonthlyReportEmail(
       margin-bottom: 20px;
       border: 1px solid #e0e0e0;
     }
+    .ai-content h1 {
+      font-size: 18px;
+      color: #667eea;
+      margin: 20px 0 12px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    .ai-content h1:first-child {
+      margin-top: 0;
+    }
+    .ai-content h2 {
+      font-size: 16px;
+      color: #764ba2;
+      margin: 16px 0 10px 0;
+    }
+    .ai-content p {
+      margin: 10px 0;
+      line-height: 1.7;
+    }
+    .ai-content ul {
+      margin: 10px 0;
+      padding-left: 24px;
+    }
+    .ai-content li {
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+    .ai-content strong {
+      color: #333;
+    }
     .footer {
       text-align: center;
       color: #666;
@@ -129,8 +159,8 @@ export function generateMonthlyReportEmail(
 
   <div class="section">
     <h2>🎯 Podsumowanie Działań</h2>
-    <div class="content">
-      ${aiGeneratedContent.replace(/\n/g, '<br>')}
+    <div class="content ai-content">
+      ${aiGeneratedContent}
     </div>
   </div>
 
@@ -292,6 +322,36 @@ export function generateWeeklyReportEmail(
     .content li {
       margin-bottom: 8px;
     }
+    .ai-content h1 {
+      font-size: 20px;
+      color: #4facfe;
+      margin: 24px 0 14px 0;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    .ai-content h1:first-child {
+      margin-top: 0;
+    }
+    .ai-content h2 {
+      font-size: 17px;
+      color: #00c6fb;
+      margin: 18px 0 12px 0;
+    }
+    .ai-content p {
+      margin: 12px 0;
+      line-height: 1.8;
+    }
+    .ai-content ul {
+      margin: 12px 0;
+      padding-left: 28px;
+    }
+    .ai-content li {
+      margin-bottom: 10px;
+      line-height: 1.7;
+    }
+    .ai-content strong {
+      color: #333;
+    }
     .footer {
       text-align: center;
       color: #666;
@@ -354,8 +414,8 @@ export function generateWeeklyReportEmail(
 
   <div class="section">
     <h2>📝 Szczegółowy Raport</h2>
-    <div class="content">
-      ${aiGeneratedContent.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
+    <div class="content ai-content">
+      ${aiGeneratedContent}
     </div>
   </div>
 

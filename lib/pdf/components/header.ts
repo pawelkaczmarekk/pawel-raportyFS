@@ -63,13 +63,7 @@ export function renderHeader(
   });
   y -= LAYOUT.fonts.subheading + 20;
 
-  // Greeting - Dzień dobry [Partner Name]
-  generator.drawText(page, `Dzień dobry`, x, y, {
-    size: LAYOUT.fonts.body,
-    color: COLORS.text.body,
-  });
-  y -= LAYOUT.fonts.body + 5;
-
+  // Partner Name
   generator.drawText(page, data.partnerName, x, y, {
     size: LAYOUT.fonts.heading,
     font: generator.getBoldFont(),

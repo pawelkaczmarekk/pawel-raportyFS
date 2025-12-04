@@ -130,6 +130,13 @@ export interface WeeklySalesData {
   sales: number;
 }
 
+export interface MonthlySalesData {
+  month: string;      // Format: "Sty", "Lut", etc.
+  year: number;
+  date: Date;
+  sales: number;
+}
+
 export interface TopChange {
   description: string;
   konto: string;

@@ -23,6 +23,7 @@ function formatMonthLabel(month: string): string {
 }
 
 // Generate chart using QuickChart.io API (POST method for reliability)
+// Optimized for 12 months with thin, readable bars
 export async function generateHistoricalChart(data: ChartData): Promise<Buffer | null> {
   try {
     // Data should already be cleaned by sheets service - just validate
@@ -41,120 +42,156 @@ export async function generateHistoricalChart(data: ChartData): Promise<Buffer |
     // Convert sales to thousands for cleaner Y-axis
     const salesInThousands = data.sales.map(s => Math.round(s / 1000));
 
+    // Calculate average for reference line
+    const average = salesInThousands.reduce((sum, val) => sum + val, 0) / salesInThousands.length;
+    const averageLine = new Array(salesInThousands.length).fill(Math.round(average));
+
     console.log(`[Chart] Labels:`, formattedLabels);
     console.log(`[Chart] Values (tys.):`, salesInThousands);
+    console.log(`[Chart] Average:`, Math.round(average));
+
+    // Highlight last month (most recent) with different color - Orange theme
+    const backgroundColors = salesInThousands.map((_, index) =>
+      index === salesInThousands.length - 1
+        ? 'rgba(255, 127, 80, 0.95)'   // Coral orange for last month
+        : 'rgba(255, 127, 80, 0.65)'   // Lighter orange for others
+    );
+
+    const borderColors = salesInThousands.map((_, index) =>
+      index === salesInThousands.length - 1
+        ? 'rgba(230, 100, 50, 1)'
+        : 'rgba(255, 127, 80, 0.85)'
+    );
 
     const chartConfig = {
       type: 'bar',
       data: {
         labels: formattedLabels,
-        datasets: [{
-          label: 'Sprzedaż (tyś. PLN)',
-          data: salesInThousands,
-          backgroundColor: 'rgba(255, 120, 70, 1)',
-          borderColor: 'rgba(200, 80, 40, 1)',
-          borderWidth: 3,
-          borderRadius: 8,
-          barPercentage: 0.75,
-          categoryPercentage: 0.9,
-        }],
+        datasets: [
+          {
+            label: 'Sprzedaż (tyś. PLN)',
+            data: salesInThousands,
+            backgroundColor: backgroundColors,
+            borderColor: borderColors,
+            borderWidth: 1,
+            borderRadius: 3,
+            barPercentage: 0.5,        // Thin bars (50% of available space)
+            categoryPercentage: 0.85,  // Good spacing between bar groups
+          },
+          {
+            label: 'Średnia',
+            data: averageLine,
+            type: 'line',
+            borderColor: 'rgba(55, 65, 81, 0.8)',  // Dark gray for contrast
+            borderWidth: 2,
+            borderDash: [6, 3],
+            fill: false,
+            pointRadius: 0,
+            tension: 0,
+          },
+        ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+          padding: {
+            top: 25,
+            right: 20,
+            bottom: 10,
+            left: 10,
+          },
+        },
         plugins: {
           title: {
             display: true,
-            text: 'SPRZEDAŻ (w tysiącach PLN)',
-            font: { size: 32, weight: 'bold', family: 'Arial' },
-            color: '#222',
+            text: 'Trend sprzedaży - ostatnie 12 miesięcy',
+            font: { size: 24, weight: 'bold', family: 'Arial, sans-serif' },
+            color: '#1f2937',
             padding: { top: 10, bottom: 20 },
           },
           legend: {
             display: true,
             position: 'top',
+            align: 'end',
             labels: {
-              font: { size: 24, weight: 'bold', family: 'Arial' },
-              color: '#333',
-              padding: 20,
-              boxWidth: 30,
-              boxHeight: 20,
+              font: { size: 14, family: 'Arial, sans-serif' },
+              color: '#4b5563',
+              padding: 16,
+              boxWidth: 12,
+              boxHeight: 12,
+              usePointStyle: true,
             },
           },
           datalabels: {
             display: true,
-            color: '#000',
-            font: { size: 26, weight: 'bold', family: 'Arial' },
+            color: '#374151',
+            font: { size: 11, weight: 'bold', family: 'Arial, sans-serif' },
             anchor: 'end',
             align: 'top',
-            offset: 6,
-            formatter: (val: number) => val.toLocaleString('pl-PL') + ' tyś.',
+            offset: 4,
+            formatter: (val: number) => {
+              if (val >= 1000) {
+                return (val / 1000).toFixed(1) + 'M';
+              }
+              return val + 'k';
+            },
           },
         },
         scales: {
           y: {
             display: true,
             beginAtZero: true,
-            grace: '20%',
-            title: {
-              display: true,
-              text: 'tyś. PLN',
-              font: { size: 22, weight: 'bold', family: 'Arial' },
-              color: '#444',
-              padding: 10,
-            },
-            ticks: {
-              font: { size: 20, weight: 'bold', family: 'Arial' },
-              color: '#444',
-              padding: 8,
+            grace: '15%',
+            border: {
+              display: false,
             },
             grid: {
-              color: 'rgba(0,0,0,0.1)',
+              color: 'rgba(0, 0, 0, 0.06)',
               lineWidth: 1,
+            },
+            ticks: {
+              font: { size: 12, family: 'Arial, sans-serif' },
+              color: '#6b7280',
+              padding: 8,
+              callback: (value: number) => {
+                if (value >= 1000) {
+                  return (value / 1000).toFixed(0) + 'M';
+                }
+                return value + 'k';
+              },
             },
           },
           x: {
-            title: {
-              display: true,
-              text: 'Miesiąc',
-              font: { size: 22, weight: 'bold', family: 'Arial' },
-              color: '#444',
-              padding: 10,
+            grid: {
+              display: false,
+            },
+            border: {
+              display: false,
             },
             ticks: {
-              font: { size: 24, weight: 'bold', family: 'Arial' },
-              color: '#333',
-              maxRotation: 0,
-              minRotation: 0,
-              padding: 10,
+              font: { size: 12, weight: '500', family: 'Arial, sans-serif' },
+              color: '#374151',
+              maxRotation: 45,
+              minRotation: 45,
+              padding: 6,
             },
-            grid: { display: false },
-            border: { display: false },
-          },
-        },
-        layout: {
-          padding: {
-            top: 15,
-            right: 40,
-            bottom: 15,
-            left: 15,
           },
         },
       },
     };
 
     // Use POST method for reliable chart generation
-    // Smaller canvas = larger fonts relative to chart, then scale up with devicePixelRatio
     const response = await fetch('https://quickchart.io/chart', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chart: chartConfig,
-        width: 800,    // Small canvas = fonts look bigger
-        height: 500,   // Good aspect ratio
+        width: 900,
+        height: 450,
         backgroundColor: 'white',
         format: 'png',
-        devicePixelRatio: 4,  // Scale up 4x for high resolution
+        devicePixelRatio: 3,  // High resolution for crisp PDF
       }),
     });
 
@@ -181,8 +218,8 @@ export async function renderChartSection(
   const x = LAYOUT.margin.left;
   let y = startY;
 
-  // Section header - chart shows 5 months before current month (for previous month report)
-  y = generator.drawSectionHeader(page, '6. Historia sprzedaży (5 ostatnich miesięcy)', x, y);
+  // Section header - 12 months
+  y = generator.drawSectionHeader(page, '6. Historia sprzedaży (12 miesięcy)', x, y);
   y -= LAYOUT.spacing.paragraph;
 
   // Check if we have data (already cleaned by sheets service)

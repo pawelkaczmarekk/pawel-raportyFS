@@ -5,8 +5,8 @@ export const COLORS = {
   primaryHex: '#FF7F50',
 
   // Secondary colors
-  secondary: { r: 0.2, g: 0.2, b: 0.2 }, // #333333 - Dark gray
-  secondaryHex: '#333333',
+  secondary: { r: 0.8, g: 0.4, b: 0.2 }, // #CC6633 - Darker orange for h2
+  secondaryHex: '#CC6633',
 
   // Text colors
   text: {

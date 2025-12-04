@@ -65,20 +65,32 @@ INFORMACJE OD OPIEKUNA
 
 ═══════════════════════════════════════════════════════════════
 
-ZADANIE: Napisz ZWIĘZŁY opis współpracy (MAX 100-120 słów!)
+ZADANIE: Napisz profesjonalny opis współpracy w formacie HTML.
+
+WYMAGANY FORMAT HTML:
+- Używaj <h2> dla nagłówków sekcji
+- Używaj <p> dla akapitów
+- Używaj <strong> dla wyróżnienia ważnych liczb i pojęć
+- Możesz użyć <ul><li> dla krótkich list (max 3-4 punkty)
+
+STRUKTURA RAPORTU:
+<h2>📊 Podsumowanie wyników</h2>
+<p>2-3 zdania z kluczowymi liczbami (sprzedaż, ROAS, dynamika)</p>
+
+<h2>🎯 Kluczowe osiągnięcia</h2>
+<p>lub krótka lista <ul><li> z 2-3 najważniejszymi osiągnięciami</p>
+
+<h2>🚀 Rekomendacje na przyszłość</h2>
+<p>1-2 zdania z konkretnymi rekomendacjami</p>
 
 ZASADY:
-1. MAX 2 krótkie akapity - nie więcej!
+1. MAX 150 słów łącznie
 2. Używaj LICZB z danych (sprzedaż, ROAS, dynamika)
-3. Pierwszy akapit: podsumowanie wyników (2-3 zdania)
-4. Drugi akapit: krótka rekomendacja (1-2 zdania)
-5. NIE pisz wstępów typu "Z przyjemnością informujemy..."
-6. NIE używaj wypunktowań
-7. AKTYWNY głos: "Zrealizowaliśmy", "Osiągnęliśmy"
+3. NIE pisz wstępów typu "Z przyjemnością informujemy..."
+4. AKTYWNY głos: "Zrealizowaliśmy", "Osiągnęliśmy"
+5. Wyróżniaj kluczowe liczby za pomocą <strong>
 
-LIMITY: Absolutnie MAX 120 słów. Każde zdanie musi nieść konkretną informację.
-
-Odpowiedź (tylko tekst, bez nagłówków, po polsku):`;
+Odpowiedź (tylko kod HTML, po polsku):`;
 
     try {
       const result = await this.model.generateContent(prompt);
@@ -148,37 +160,46 @@ ${userInput.wykonaneDzialania}
 
 ═══════════════════════════════════════════════════════════════
 
-Zadanie: Na podstawie ALL powyższych danych stwórz kompleksowy raport tygodniowy z następującymi sekcjami:
+ZADANIE: Stwórz kompleksowy raport tygodniowy w formacie HTML.
 
-**SEKCJA 1: Podsumowanie sprzedaży (1-2 zdania)**
-Krótkie podsumowanie wyników sprzedażowych w kontekście celu tygodniowego.
+WYMAGANY FORMAT HTML:
+- Używaj <h1> dla głównego tytułu sekcji
+- Używaj <h2> dla podsekcji
+- Używaj <p> dla akapitów
+- Używaj <ul><li> dla list punktowanych
+- Używaj <strong> dla wyróżnienia ważnych liczb i pojęć
+- Używaj emoji w nagłówkach dla lepszej wizualizacji
 
-**SEKCJA 2: Najważniejsze wydarzenia (TOP 3-5)**
-Lista najważniejszych zmian i wydarzeń z ostatniego tygodnia. Wykorzystaj dane z "TOP 5 ZMIAN" oraz historii. Każdy punkt powinien:
-- Wyjaśniać DLACZEGO jest to ważne dla partnera
-- Być konkretny (liczby, daty, produkty)
-- Format: • [Krótki opis] - [Znaczenie/wpływ]
+STRUKTURA RAPORTU:
 
-**SEKCJA 3: Wykonane działania (3-7 punktów)**
-Lista konkretnych działań wykonanych przez zespół. Połącz:
-- Zadania z ClickUp
-- Informacje od opiekuna
-- Działania związane ze zmianami w systemie
+<h1>📊 Podsumowanie tygodnia</h1>
+<p>1-2 zdania podsumowujące wyniki sprzedażowe w kontekście celu tygodniowego. Użyj <strong> dla kluczowych liczb.</p>
 
-Format każdego punktu: • [Działanie] - [Rezultat/cel działania]
+<h1>⭐ Najważniejsze wydarzenia</h1>
+<ul>
+<li><strong>[Wydarzenie]</strong> - znaczenie/wpływ dla partnera</li>
+</ul>
+(TOP 3-5 najważniejszych zmian z danych)
 
-**SEKCJA 4: Call-to-action (1-2 zdania)**
-Zachęta lub rekomendacja dla partnera na następny tydzień, oparta na danych z raportu.
+<h1>✅ Wykonane działania</h1>
+<ul>
+<li><strong>[Działanie]</strong> - rezultat/cel działania</li>
+</ul>
+(3-7 punktów łączących zadania ClickUp, informacje od opiekuna, zmiany w systemie)
 
-WAŻNE ZASADY:
-- Pisz w języku polskim
-- Używaj emoji (📊 💰 🚀 ⭐ ✅ 📈 🎯) aby raport był bardziej wizualny
-- Bądź konkretny - używaj liczb, dat, nazwań produktów z danych
-- Zachowaj profesjonalny ale ciepły ton
-- Podkreślaj pozytywne aspekty, ale bądź szczery o wyzwaniach
-- Jeśli brakuje danych w jakiejś sekcji, napisz to wprost (nie wymyślaj)
+<h1>🚀 Rekomendacje na przyszły tydzień</h1>
+<p>1-2 zdania z konkretnymi rekomendacjami opartymi na danych z raportu.</p>
 
-Odpowiedź (pełny raport ze wszystkimi sekcjami):`;
+ZASADY:
+1. Pisz w języku polskim
+2. Bądź konkretny - używaj liczb, dat, nazw produktów z danych
+3. Zachowaj profesjonalny ale ciepły ton
+4. Podkreślaj pozytywne aspekty, ale bądź szczery o wyzwaniach
+5. Jeśli brakuje danych w jakiejś sekcji, pomiń ją lub napisz krótko
+6. Wyróżniaj kluczowe informacje za pomocą <strong>
+7. NIE używaj markdown (**, ##) - tylko czyste tagi HTML
+
+Odpowiedź (tylko kod HTML, po polsku):`;
 
     try {
       const result = await this.model.generateContent(prompt);

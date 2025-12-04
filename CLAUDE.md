@@ -120,14 +120,44 @@ All services in `lib/api/` are singleton instances:
   - Filters for "closed" or "complete" status
 
 - **GeminiService** (`gemini.ts`):
-  - Uses `gemini-2.0-flash-exp` model
+  - Configurable model via `GEMINI_MODEL` env var (defaults to `gemini-1.5-flash`)
   - Two prompt types: monthly (narrative) and weekly (bullet points)
   - Combines ClickUp tasks + user input
 
 - **GmailService** (`gmail.ts`):
   - OAuth2 with refresh token
   - Base64-encoded RFC 2822 format
-  - Sends HTML emails
+  - Sends HTML emails with optional PDF attachments
+
+### PDF Generation Module
+
+Located in `lib/pdf/`, this module generates branded PDF reports:
+
+- **PDFGenerator** (`pdf-generator.ts`): Core class using pdf-lib
+  - Uses template background from `public/assets/szata-background.pdf`
+  - Embeds Roboto fonts from `public/fonts/` for Polish character support
+  - Multi-page support with consistent branding
+
+- **Templates** (`lib/pdf/templates/`):
+  - `monthly-report.ts`: Full monthly report with metrics grids and AI summary
+  - `weekly-report.ts`: Weekly report with sales charts and action lists
+
+- **Components** (`lib/pdf/components/`):
+  - Modular sections: header, sales, ads metrics, dynamics, AI summary, charts
+  - Each component returns new Y position for proper layout flow
+
+- **Chart Generation** (`lib/utils/chart-generator.ts`):
+  - Uses QuickChart.io API to generate Chart.js images server-side
+  - Returns base64-encoded PNG for PDF embedding
+  - Includes fallback to direct URL if fetch fails
+
+### Report API Pattern
+
+Report endpoints follow a generate/send pattern:
+- `POST /api/reports/{type}/generate` - Generates email HTML (and PDF if applicable), returns preview
+- `POST /api/reports/{type}/send` - Sends the finalized email with attachments
+
+This allows users to preview and edit emails before sending via the WYSIWYG editor.
 
 ### Component Structure
 
@@ -140,6 +170,8 @@ All services in `lib/api/` are singleton instances:
 - `MonthlyReportTab`: 3 text fields (achievements, challenges, plans)
 - `WeeklyReportTab`: 1 text field (actions performed)
 - `OpinionRequestTab`: Simple partner selection + send
+- `EmailEditorModal`: WYSIWYG editor using TipTap for email preview/edit before sending
+- `SearchableSelect`: Filterable partner dropdown
 
 **Email Templates** (`lib/templates/email.ts`):
 - HTML with inline styles (no external CSS)
@@ -164,6 +196,8 @@ All TypeScript interfaces in `types/index.ts`:
 - `Partner`: 46 fields matching Google Sheets columns
 - `ClickUpTask`: Minimal task data with status/dates
 - `ReportData`: Combined data structure for report generation
+- `EnhancedWeeklyReportData`: Extended report data with sales charts and history
+- `EmailTemplateWithAttachment`: Email with optional PDF attachments
 - Input types for each report form
 
 ## Key Technical Details
@@ -219,6 +253,14 @@ All UI text, email content, and AI prompts are in Polish. Keep this consistent w
 3. Update `mapRowToPartner()` method
 4. Update email templates if displaying new fields
 
+### Adding PDF Sections
+1. Create component in `lib/pdf/components/` following the pattern:
+   - Accept `PDFGenerator`, `PDFPage`, and starting Y position
+   - Return new Y position after drawing content
+2. Export from `lib/pdf/components/index.ts`
+3. Call from appropriate template in `lib/pdf/templates/`
+4. Use `LAYOUT` constants from `lib/pdf/utils/layout.ts` for consistent spacing
+
 ### Testing API Integrations
 Each service has error handling that logs to console. Check:
 - Browser console for client-side errors
@@ -232,30 +274,43 @@ Each service has error handling that logs to console. Check:
 - **ClickUp Mapping**: Partner names must match exactly between Sheets and mapping JSON
 - **Email Sending**: Requires valid Gmail refresh token (expires periodically)
 - **AI Content**: Gemini prompts are optimized for Polish language responses
+- **PDF Assets**: Requires `public/assets/szata-background.pdf` template and `public/fonts/Roboto-*.ttf` fonts
+- **Chart API**: QuickChart.io requires external network access for chart image generation
 
 ## File Organization
 
 ```
 app/
-├── api/                    # API routes
-│   ├── auth/              # NextAuth endpoints
-│   ├── partners/          # Partner list endpoint
-│   ├── reports/           # Report generation endpoints
-│   └── opinion/           # Opinion submission handler
-├── auth/                  # Auth UI pages
-├── opinion/               # Opinion response pages
-├── layout.tsx             # Root layout with SessionProvider
-└── page.tsx               # Main dashboard with tabs
+├── api/
+│   ├── auth/[...nextauth]/     # NextAuth endpoints
+│   ├── partners/               # Partner list endpoint
+│   ├── reports/
+│   │   ├── monthly/            # generate/ and send/ endpoints
+│   │   ├── weekly/             # generate/ and send/ endpoints
+│   │   └── opinion/            # generate/ and send/ endpoints
+│   ├── opinion/submit/[token]/ # Token-based opinion submission
+│   └── clickup/folders/        # Debug endpoint for list discovery
+├── auth/                       # Auth UI pages (signin, error)
+├── opinion/                    # Opinion response pages (thank-you, error, already-submitted)
+├── layout.tsx                  # Root layout with SessionProvider
+└── page.tsx                    # Main dashboard with tabs
 
-components/                # React components (tabs)
+components/                     # React components
 lib/
-├── api/                   # Service layer (all integrations)
-├── templates/             # HTML email templates
-├── utils/                 # Helper functions (dates, typeform)
-└── auth.ts                # NextAuth configuration
+├── api/                        # Service layer (sheets, clickup, gemini, gmail, opinions)
+├── pdf/                        # PDF generation module
+│   ├── components/             # Modular PDF sections
+│   ├── templates/              # Report-specific templates
+│   └── utils/                  # Layout constants, colors
+├── templates/                  # HTML email templates
+├── utils/                      # Helper functions (dates, chart-generator)
+└── auth.ts                     # NextAuth configuration
 
-types/                     # TypeScript definitions
-middleware.ts              # Request middleware (currently passthrough)
+public/
+├── assets/                     # PDF template background, logos
+└── fonts/                      # Roboto TTF fonts for PDF embedding
+
+types/                          # TypeScript definitions
 ```
 
 ## Deployment Notes
