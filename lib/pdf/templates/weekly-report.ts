@@ -20,6 +20,7 @@ export interface WeeklyPDFData {
     wykonaneDzialania: string;
   };
   dateRange: { start: Date; end: Date };
+  driveActionsSummary?: string[];
 }
 
 function formatDateRange(start: Date, end: Date): string {
@@ -37,7 +38,7 @@ function formatCurrentMonth(): string {
 }
 
 export async function generateWeeklyPDF(data: WeeklyPDFData): Promise<Buffer> {
-  const { partner, tasks, aiContent, userInput } = data;
+  const { partner, tasks, aiContent, userInput, driveActionsSummary } = data;
 
   // Ensure dateRange contains Date objects (may come as strings from JSON)
   const dateRange = {
@@ -64,7 +65,11 @@ export async function generateWeeklyPDF(data: WeeklyPDFData): Promise<Buffer> {
   const clickupActions = tasks
     .filter(t => t.status?.status?.toLowerCase().includes('complete') || t.status?.status?.toLowerCase().includes('closed'))
     .map(t => t.name);
-  const combinedActions = [...userActions, ...clickupActions];
+
+  // Include Google Drive actions summary
+  const driveActions = driveActionsSummary || [];
+
+  const combinedActions = [...userActions, ...clickupActions, ...driveActions];
   const actionsToRender = combinedActions.length > 0 ? combinedActions : ['Brak zarejestrowanych działań w tym okresie'];
 
   // Estimate total page 1 content height for dynamic background

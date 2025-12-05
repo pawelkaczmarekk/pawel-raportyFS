@@ -145,7 +145,7 @@ class GoogleDriveService {
           rowsProcessed++;
 
           // Map columns: Data zdarzenia | Godzina | Konto | Rodzaj | ID oferty | Wartość | Wartość przed
-          if (row.length >= 7) {
+          if (row.length >= 4) {  // Minimum: date, time, account, type
             try {
               const dateStr = row[0];
               const parsedDate = this.parseDate(dateStr);
@@ -162,8 +162,8 @@ class GoogleDriveService {
                 konto: row[2] || '',
                 rodzaj: row[3] || '',
                 idOferty: row[4] || '',
-                wartosc: this.parseNumber(row[5]),
-                wartoscPrzed: this.parseNumber(row[6]),
+                wartosc: row[5] || '',      // tekstowa wartość (np. nowy tytuł)
+                wartoscPrzed: row[6] || '', // poprzednia wartość tekstowa
               };
 
               // OPTIMIZATION 7: Validate data before adding
@@ -240,40 +240,55 @@ class GoogleDriveService {
     return isNaN(parsed) ? 0 : parsed;
   }
 
-  getTopChanges(changes: HistoryChange[], limit: number = 5): TopChange[] {
-    // Calculate change magnitude and sort
-    const changesWithMagnitude = changes.map((change) => {
-      const magnitude = Math.abs(change.wartosc - change.wartoscPrzed);
+  getTopChanges(changes: HistoryChange[], limit: number = 10): TopChange[] {
+    // Group changes by type (rodzaj) and take most recent from each type
+    const byType: Record<string, HistoryChange[]> = {};
 
-      let description = '';
-      if (change.wartosc > change.wartoscPrzed) {
-        description = `Wzrost wartości o ${magnitude.toFixed(2)} PLN`;
-      } else if (change.wartosc < change.wartoscPrzed) {
-        description = `Spadek wartości o ${magnitude.toFixed(2)} PLN`;
-      } else {
-        description = `Zmiana: ${change.rodzaj}`;
+    for (const change of changes) {
+      if (!byType[change.rodzaj]) {
+        byType[change.rodzaj] = [];
       }
+      byType[change.rodzaj].push(change);
+    }
 
-      return {
-        description,
-        konto: change.konto,
-        rodzaj: change.rodzaj,
-        wartoscZmiany: magnitude,
-        dataZdarzenia: change.dataZdarzenia,
-      };
+    // Sort each group by date (most recent first) and take one from each
+    const topChanges: TopChange[] = [];
+
+    for (const [rodzaj, typeChanges] of Object.entries(byType)) {
+      // Sort by date descending
+      typeChanges.sort((a, b) => b.dataZdarzenia.getTime() - a.dataZdarzenia.getTime());
+
+      // Take the most recent change of this type
+      const mostRecent = typeChanges[0];
+      const count = typeChanges.length;
+
+      topChanges.push({
+        description: count > 1
+          ? `${rodzaj} (${count}x)`
+          : rodzaj,
+        konto: mostRecent.konto,
+        rodzaj: mostRecent.rodzaj,
+        wartosc: mostRecent.wartosc,
+        wartoscPrzed: mostRecent.wartoscPrzed,
+        dataZdarzenia: mostRecent.dataZdarzenia,
+        idOferty: mostRecent.idOferty,
+      });
+    }
+
+    // Sort by count (most frequent types first), then by date
+    topChanges.sort((a, b) => {
+      const countA = byType[a.rodzaj]?.length || 0;
+      const countB = byType[b.rodzaj]?.length || 0;
+      if (countB !== countA) return countB - countA;
+      return b.dataZdarzenia.getTime() - a.dataZdarzenia.getTime();
     });
 
-    // Sort by magnitude and take top N
-    const sorted = changesWithMagnitude.sort(
-      (a, b) => b.wartoscZmiany - a.wartoscZmiany
-    );
-
-    return sorted.slice(0, limit);
+    return topChanges.slice(0, limit);
   }
 
   formatChangesForReport(changes: HistoryChange[]): string {
     if (changes.length === 0) {
-      return 'Brak zmian w historii dla tego partnera w ostatnim tygodniu.';
+      return 'Brak zmian w historii dla tego partnera w ostatnim okresie.';
     }
 
     const grouped: Record<string, HistoryChange[]> = {};
@@ -285,11 +300,80 @@ class GoogleDriveService {
       grouped[change.rodzaj].push(change);
     });
 
-    let formatted = `Znaleziono ${changes.length} zmian w systemie:\n\n`;
+    let formatted = `Znaleziono ${changes.length} działań w systemie:\n\n`;
 
     Object.entries(grouped).forEach(([rodzaj, items]) => {
-      formatted += `${rodzaj}: ${items.length} zmian\n`;
+      formatted += `• ${rodzaj}: ${items.length} zmian\n`;
     });
+
+    return formatted;
+  }
+
+  /**
+   * Format changes for AI processing - detailed list with all information
+   * This gives AI full context to analyze and summarize the actions
+   */
+  formatChangesForAI(changes: HistoryChange[]): string {
+    if (changes.length === 0) {
+      return 'Brak zarejestrowanych działań w systemie w tym okresie.';
+    }
+
+    // Sort by date (newest first)
+    const sorted = [...changes].sort(
+      (a, b) => b.dataZdarzenia.getTime() - a.dataZdarzenia.getTime()
+    );
+
+    // Group by date for better readability
+    const byDate: Record<string, HistoryChange[]> = {};
+    for (const change of sorted) {
+      const dateKey = change.dataZdarzenia.toLocaleDateString('pl-PL', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+      if (!byDate[dateKey]) {
+        byDate[dateKey] = [];
+      }
+      byDate[dateKey].push(change);
+    }
+
+    let formatted = `HISTORIA DZIAŁAŃ NA KONCIE (${changes.length} zarejestrowanych działań):\n\n`;
+
+    for (const [date, dayChanges] of Object.entries(byDate)) {
+      formatted += `📅 ${date}:\n`;
+
+      for (const change of dayChanges) {
+        formatted += `  • [${change.godzinaZdarzenia}] ${change.rodzaj}`;
+
+        if (change.idOferty) {
+          formatted += ` (oferta: ${change.idOferty})`;
+        }
+
+        if (change.wartosc) {
+          formatted += `\n    → Nowa wartość: "${change.wartosc.substring(0, 100)}${change.wartosc.length > 100 ? '...' : ''}"`;
+        }
+
+        if (change.wartoscPrzed) {
+          formatted += `\n    ← Poprzednia: "${change.wartoscPrzed.substring(0, 100)}${change.wartoscPrzed.length > 100 ? '...' : ''}"`;
+        }
+
+        formatted += '\n';
+      }
+
+      formatted += '\n';
+    }
+
+    // Add summary by type
+    const byType: Record<string, number> = {};
+    for (const change of changes) {
+      byType[change.rodzaj] = (byType[change.rodzaj] || 0) + 1;
+    }
+
+    formatted += `PODSUMOWANIE TYPÓW DZIAŁAŃ:\n`;
+    const sortedTypes = Object.entries(byType).sort((a, b) => b[1] - a[1]);
+    for (const [type, count] of sortedTypes) {
+      formatted += `• ${type}: ${count}x\n`;
+    }
 
     return formatted;
   }

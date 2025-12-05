@@ -206,7 +206,8 @@ export function generateWeeklyReportEmail(
         <div style="padding: 12px; margin-bottom: 10px; background: ${index === 0 ? '#fff3cd' : '#f8f9fa'}; border-left: 4px solid ${index === 0 ? '#ffc107' : '#4facfe'}; border-radius: 4px;">
           <strong>${index + 1}. ${change.rodzaj}</strong><br>
           <span style="color: #666;">${change.description}</span><br>
-          <small style="color: #999;">Zmiana wartości: ${change.wartoscZmiany.toLocaleString('pl-PL')} PLN | ${new Date(change.dataZdarzenia).toLocaleDateString('pl-PL')}</small>
+          ${change.wartosc ? `<small style="color: #999;">Nowa wartość: "${change.wartosc.substring(0, 50)}${change.wartosc.length > 50 ? '...' : ''}"</small><br>` : ''}
+          <small style="color: #999;">${new Date(change.dataZdarzenia).toLocaleDateString('pl-PL')}${change.idOferty ? ` | Oferta: ${change.idOferty}` : ''}</small>
         </div>
       `).join('')}
     </div>

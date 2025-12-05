@@ -20,6 +20,7 @@ export class GeminiService {
       osiagniecia: string;
       wyzwania: string;
       plany: string;
+      historiaDzialan?: string;  // Historia działań z Google Drive
     }
   ): Promise<string> {
     const tasksSummary = this.formatTasksForAI(tasks);
@@ -57,6 +58,11 @@ WYKONANE ZADANIA (ClickUp)
 ${tasksSummary}
 
 ═══════════════════════════════════════════════════════════════
+HISTORIA DZIAŁAŃ NA KONCIE (z systemu)
+═══════════════════════════════════════════════════════════════
+${userInput.historiaDzialan || 'Brak zarejestrowanych działań w systemie.'}
+
+═══════════════════════════════════════════════════════════════
 INFORMACJE OD OPIEKUNA
 ═══════════════════════════════════════════════════════════════
 🏆 Osiągnięcia: ${userInput.osiagniecia}
@@ -80,15 +86,19 @@ STRUKTURA RAPORTU:
 <h2>🎯 Kluczowe osiągnięcia</h2>
 <p>lub krótka lista <ul><li> z 2-3 najważniejszymi osiągnięciami</p>
 
+<h2>✅ Wykonane działania</h2>
+<p>Podsumuj najważniejsze działania z historii systemu i ClickUp (edycje ofert, optymalizacje, zmiany)</p>
+
 <h2>🚀 Rekomendacje na przyszłość</h2>
 <p>1-2 zdania z konkretnymi rekomendacjami</p>
 
 ZASADY:
-1. MAX 150 słów łącznie
+1. MAX 200 słów łącznie
 2. Używaj LICZB z danych (sprzedaż, ROAS, dynamika)
 3. NIE pisz wstępów typu "Z przyjemnością informujemy..."
 4. AKTYWNY głos: "Zrealizowaliśmy", "Osiągnęliśmy"
 5. Wyróżniaj kluczowe liczby za pomocą <strong>
+6. W sekcji "Wykonane działania" podsumuj typy działań z historii (edycje tytułów, optymalizacje opisów, itp.)
 
 Odpowiedź (tylko kod HTML, po polsku):`;
 
@@ -139,14 +149,9 @@ WYNIKI SPRZEDAŻOWE
 • Realizacja celu miesięcznego: ${partner.realizacji}%
 
 ═══════════════════════════════════════════════════════════════
-TOP 5 NAJWAŻNIEJSZYCH ZMIAN W SYSTEMIE
+HISTORIA DZIAŁAŃ NA KONCIE (z systemu)
 ═══════════════════════════════════════════════════════════════
-${userInput.topZmiany || 'Brak znaczących zmian w tym okresie.'}
-
-═══════════════════════════════════════════════════════════════
-HISTORIA ZMIAN (szczegóły)
-═══════════════════════════════════════════════════════════════
-${userInput.historiaZmian || 'Brak danych z historii zmian.'}
+${userInput.historiaZmian || 'Brak zarejestrowanych działań w systemie w tym okresie.'}
 
 ═══════════════════════════════════════════════════════════════
 WYKONANE ZADANIA W CLICKUP

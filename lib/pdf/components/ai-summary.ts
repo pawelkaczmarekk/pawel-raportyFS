@@ -252,12 +252,16 @@ function renderBlock(
     }
     const font = getFontForStyle(generator, style.fontType);
 
+    // Use justification for paragraphs (not headers)
+    const shouldJustify = block.type === 'paragraph';
+
     y = generator.drawMultilineText(page, text, x, y, {
       size: style.fontSize,
       color: style.color,
       maxWidth: LAYOUT.content.width,
       lineHeight: block.type === 'h1' || block.type === 'h2' ? 1.3 : LAYOUT.lineHeight.normal,
       font,
+      justify: shouldJustify,
     });
   }
 

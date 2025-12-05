@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
       userInput: userInput || {},
       dateRange: reportData.dateRange,
       celMiesieczny: reportData.celMiesieczny,  // Pass new month goal
+      driveActionsSummary: reportData.driveActionsSummary || [],  // Pass Google Drive actions
     });
 
     console.log(`[MonthlyReport-Send] PDF generated, size: ${pdfBuffer.length} bytes`);

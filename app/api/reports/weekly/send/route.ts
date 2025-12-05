@@ -35,10 +35,11 @@ export async function POST(request: NextRequest) {
     // Generate PDF with the edited AI content
     const pdfBuffer = await generateWeeklyPDF({
       partner: reportData.partner,
-      tasks: reportData.enhancedData?.clickupTasks || [],
+      tasks: reportData.enhancedData?.clickupTasks || reportData.tasks || [],
       aiContent: aiContent, // Use the edited content from user
       userInput: userInput || {},
       dateRange: reportData.dateRange,
+      driveActionsSummary: reportData.driveActionsSummary || [],  // Pass Google Drive actions
     });
 
     console.log(`[WeeklyReport-Send] PDF generated, size: ${pdfBuffer.length} bytes`);

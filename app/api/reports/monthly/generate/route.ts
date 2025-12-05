@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { sheetsService } from '@/lib/api/sheets';
 import { clickupService } from '@/lib/api/clickup';
 import { geminiService } from '@/lib/api/gemini';
+import { googleDriveService } from '@/lib/api/google-drive';
 import { generateMonthlyReportEmail } from '@/lib/templates/email';
 import { getPreviousMonthRange } from '@/lib/utils/dates';
 
@@ -51,11 +52,46 @@ export async function POST(request: NextRequest) {
       dateRange.end
     );
 
+    // Fetch Google Drive history changes
+    let historiaDzialan = '';
+    let driveActionsSummary: string[] = [];
+    const driveFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+
+    if (driveFolderId) {
+      try {
+        console.log(`[MonthlyReport-Generate] Fetching Google Drive history for ${partnerName}`);
+        const historyChanges = await googleDriveService.getHistoryChanges(
+          driveFolderId,
+          partnerName,
+          dateRange.start,
+          dateRange.end
+        );
+
+        if (historyChanges.length > 0) {
+          historiaDzialan = googleDriveService.formatChangesForAI(historyChanges);
+
+          // Create summary for PDF actions section
+          const topChanges = googleDriveService.getTopChanges(historyChanges, 10);
+          driveActionsSummary = topChanges.map(tc => tc.description);
+
+          console.log(`[MonthlyReport-Generate] Found ${historyChanges.length} history changes from Google Drive`);
+        } else {
+          console.log(`[MonthlyReport-Generate] No history changes found in Google Drive for ${partnerName}`);
+        }
+      } catch (error) {
+        console.error(`[MonthlyReport-Generate] Error fetching Google Drive history:`, error);
+        // Continue without Drive data
+      }
+    } else {
+      console.log(`[MonthlyReport-Generate] Google Drive folder not configured`);
+    }
+
     // Generate AI content
     const aiContent = await geminiService.generateMonthlyReport(partner, tasks, {
       osiagniecia,
       wyzwania,
       plany,
+      historiaDzialan,
     });
 
     // Generate email HTML preview
@@ -79,6 +115,8 @@ export async function POST(request: NextRequest) {
       osiagniecia,
       wyzwania,
       plany,
+      driveActionsSummary,
+      tasks,
     });
   } catch (error) {
     console.error('Error generating monthly report:', error);

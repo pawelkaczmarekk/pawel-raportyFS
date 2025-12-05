@@ -99,6 +99,9 @@ export async function POST(request: NextRequest) {
       chartImage = undefined;
     }
 
+    // Create summary for PDF actions section
+    const driveActionsSummary = topZmiany.map(tc => tc.description);
+
     // Prepare enhanced report data
     const enhancedData: EnhancedWeeklyReportData = {
       partner,
@@ -112,9 +115,10 @@ export async function POST(request: NextRequest) {
     };
 
     // Generate AI content with all data
+    // Use formatChangesForAI for detailed history context
     const aiContent = await geminiService.generateWeeklyReport(partner, tasks, {
       wykonaneDzialania,
-      historiaZmian: googleDriveService.formatChangesForReport(historiaZmian),
+      historiaZmian: googleDriveService.formatChangesForAI(historiaZmian),
       topZmiany: topZmiany.map(t => `${t.description} (${t.rodzaj})`).join('\n'),
     });
 
@@ -132,6 +136,8 @@ export async function POST(request: NextRequest) {
         partner,
         dateRange,
         enhancedData,
+        tasks,
+        driveActionsSummary,
       },
     });
   } catch (error) {

@@ -11,6 +11,7 @@ export interface TextOptions {
   font?: PDFFont;
   maxWidth?: number;
   lineHeight?: number;
+  justify?: boolean;
 }
 
 export interface DrawContext {
@@ -143,7 +144,7 @@ export class PDFGenerator {
     });
   }
 
-  // Draw multiline text with word wrap
+  // Draw multiline text with word wrap (supports justification)
   drawMultilineText(
     page: PDFPage,
     text: string,
@@ -157,24 +158,77 @@ export class PDFGenerator {
       font = this.font!,
       maxWidth = LAYOUT.content.width,
       lineHeight = LAYOUT.lineHeight.normal,
+      justify = false,
     } = options;
 
     const lines = this.wrapText(text, font, size, maxWidth);
     let y = startY;
     const lineSpacing = size * lineHeight;
+    const rgbColor = rgb(color.r, color.g, color.b);
 
-    for (const line of lines) {
-      page.drawText(line, {
-        x,
-        y,
-        size,
-        font,
-        color: rgb(color.r, color.g, color.b),
-      });
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const isLastLine = i === lines.length - 1;
+
+      // Apply justification only for non-last lines with multiple words
+      if (justify && !isLastLine) {
+        this.drawJustifiedLine(page, line, x, y, maxWidth, size, font, rgbColor);
+      } else {
+        // Normal left-aligned text
+        page.drawText(line, {
+          x,
+          y,
+          size,
+          font,
+          color: rgbColor,
+        });
+      }
       y -= lineSpacing;
     }
 
     return y;
+  }
+
+  // Draw a single justified line (spreads words to fill maxWidth)
+  private drawJustifiedLine(
+    page: PDFPage,
+    line: string,
+    x: number,
+    y: number,
+    maxWidth: number,
+    size: number,
+    font: PDFFont,
+    color: any
+  ): void {
+    const words = line.split(' ').filter(w => w.length > 0);
+
+    // If only one word or empty line, just draw normally
+    if (words.length <= 1) {
+      page.drawText(line, { x, y, size, font, color });
+      return;
+    }
+
+    // Calculate total width of all words
+    const wordsWidth = words.reduce((sum, word) => sum + font.widthOfTextAtSize(word, size), 0);
+
+    // Calculate extra space to distribute
+    const totalSpace = maxWidth - wordsWidth;
+    const spacePerGap = totalSpace / (words.length - 1);
+
+    // Don't over-justify if there's too much space (line is too short)
+    const normalSpaceWidth = font.widthOfTextAtSize(' ', size);
+    if (spacePerGap > normalSpaceWidth * 4) {
+      // Fall back to normal rendering if justification would look weird
+      page.drawText(line, { x, y, size, font, color });
+      return;
+    }
+
+    // Draw each word with calculated spacing
+    let currentX = x;
+    for (let i = 0; i < words.length; i++) {
+      page.drawText(words[i], { x: currentX, y, size, font, color });
+      currentX += font.widthOfTextAtSize(words[i], size) + spacePerGap;
+    }
   }
 
   // Word wrap helper

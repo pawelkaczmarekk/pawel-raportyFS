@@ -120,8 +120,8 @@ export interface HistoryChange {
   konto: string;
   rodzaj: string;
   idOferty: string;
-  wartosc: number;
-  wartoscPrzed: number;
+  wartosc: string;      // tekstowa wartość (np. nowy tytuł oferty)
+  wartoscPrzed: string; // poprzednia wartość tekstowa
 }
 
 export interface WeeklySalesData {
@@ -141,8 +141,10 @@ export interface TopChange {
   description: string;
   konto: string;
   rodzaj: string;
-  wartoscZmiany: number;
+  wartosc: string;       // nowa wartość (tekst)
+  wartoscPrzed: string;  // poprzednia wartość (tekst)
   dataZdarzenia: Date;
+  idOferty: string;
 }
 
 export interface EnhancedWeeklyReportData extends ReportData {

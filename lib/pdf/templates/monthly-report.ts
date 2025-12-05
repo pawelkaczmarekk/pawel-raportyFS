@@ -26,6 +26,7 @@ export interface MonthlyPDFData {
   };
   dateRange: { start: Date; end: Date };
   celMiesieczny?: number;
+  driveActionsSummary?: string[];
 }
 
 function formatMonthYear(date: Date): string {
@@ -39,7 +40,7 @@ function needsNewPage(currentY: number, requiredHeight: number): boolean {
 }
 
 export async function generateMonthlyPDF(data: MonthlyPDFData): Promise<Buffer> {
-  const { partner, tasks, aiContent, userInput, celMiesieczny } = data;
+  const { partner, tasks, aiContent, userInput, celMiesieczny, driveActionsSummary } = data;
 
   const dateRange = {
     start: data.dateRange.start instanceof Date ? data.dateRange.start : new Date(data.dateRange.start),
@@ -66,7 +67,10 @@ export async function generateMonthlyPDF(data: MonthlyPDFData): Promise<Buffer> 
     .filter(t => t.status?.status?.toLowerCase().includes('complete') || t.status?.status?.toLowerCase().includes('closed'))
     .map(t => t.name);
 
-  const combinedActions = [...allActions, ...clickupActions];
+  // Include Google Drive actions summary
+  const driveActions = driveActionsSummary || [];
+
+  const combinedActions = [...allActions, ...clickupActions, ...driveActions];
   const actionsToRender = combinedActions.length > 0 ? combinedActions : ['Brak zarejestrowanych działań w tym okresie'];
 
   // Estimate page 1 content height for background
