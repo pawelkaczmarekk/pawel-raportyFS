@@ -1,12 +1,13 @@
 // Brand colors for PDF reports - based on vSprint orange theme
 export const COLORS = {
-  // Primary brand color (orange from PDF template)
-  primary: { r: 1, g: 0.498, b: 0.314 }, // #FF7F50 - Coral orange
-  primaryHex: '#FF7F50',
+  // Primary brand color (official vSprint orange)
+  // HEX: #ff5c0a | RGB: 255 / 92 / 10 | CMYK: 0 / 75 / 100 / 0
+  primary: { r: 1, g: 0.361, b: 0.039 }, // #ff5c0a - Official vSprint orange
+  primaryHex: '#ff5c0a',
 
-  // Secondary colors
-  secondary: { r: 0.8, g: 0.4, b: 0.2 }, // #CC6633 - Darker orange for h2
-  secondaryHex: '#CC6633',
+  // Secondary colors (same as primary for consistency)
+  secondary: { r: 1, g: 0.361, b: 0.039 }, // #ff5c0a - Same orange for h2
+  secondaryHex: '#ff5c0a',
 
   // Text colors
   text: {
@@ -36,7 +37,7 @@ export const COLORS = {
 
   // Table colors
   table: {
-    header: { r: 1, g: 0.498, b: 0.314 },     // Orange header
+    header: { r: 1, g: 0.361, b: 0.039 },     // #ff5c0a - Official vSprint orange header
     headerText: { r: 1, g: 1, b: 1 },         // White text
     rowEven: { r: 1, g: 1, b: 1 },            // White
     rowOdd: { r: 0.98, g: 0.98, b: 0.98 },    // Very light gray

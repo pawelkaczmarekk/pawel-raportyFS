@@ -142,10 +142,15 @@ function cleanInnerHTML(html: string): string {
 }
 
 // Get font size and color for block type
+// Brand guidelines:
+// - h1/h2 use BarlowSemiCondensed-Bold (headingFont), uppercase
+// - paragraphs use Barlow-Regular
+// - list items use Barlow-Regular
 function getBlockStyle(type: ContentBlock['type']): {
   fontSize: number;
   color: { r: number; g: number; b: number };
-  isBold: boolean;
+  fontType: 'heading' | 'bold' | 'regular';  // Changed from isBold to fontType
+  uppercase: boolean;
   marginTop: number;
   marginBottom: number;
 } {
@@ -154,7 +159,8 @@ function getBlockStyle(type: ContentBlock['type']): {
       return {
         fontSize: LAYOUT.fonts.heading,
         color: COLORS.primary,
-        isBold: true,
+        fontType: 'heading',  // BarlowSemiCondensed-Bold
+        uppercase: true,
         marginTop: LAYOUT.spacing.paragraph * 1.5,
         marginBottom: LAYOUT.spacing.line,
       };
@@ -162,7 +168,8 @@ function getBlockStyle(type: ContentBlock['type']): {
       return {
         fontSize: LAYOUT.fonts.subheading,
         color: COLORS.secondary || COLORS.primary,
-        isBold: true,
+        fontType: 'heading',  // BarlowSemiCondensed-Bold
+        uppercase: true,
         marginTop: LAYOUT.spacing.paragraph,
         marginBottom: LAYOUT.spacing.line * 0.5,
       };
@@ -170,7 +177,8 @@ function getBlockStyle(type: ContentBlock['type']): {
       return {
         fontSize: LAYOUT.fonts.body,
         color: COLORS.text.body,
-        isBold: false,
+        fontType: 'regular',  // Barlow-Regular
+        uppercase: false,
         marginTop: 0,
         marginBottom: LAYOUT.spacing.item,
       };
@@ -179,10 +187,24 @@ function getBlockStyle(type: ContentBlock['type']): {
       return {
         fontSize: LAYOUT.fonts.body,
         color: COLORS.text.body,
-        isBold: false,
+        fontType: 'regular',  // Barlow-Regular
+        uppercase: false,
         marginTop: 0,
         marginBottom: LAYOUT.spacing.paragraph,
       };
+  }
+}
+
+// Get the appropriate font based on fontType
+function getFontForStyle(generator: PDFGenerator, fontType: 'heading' | 'bold' | 'regular') {
+  switch (fontType) {
+    case 'heading':
+      return generator.getHeadingFont();  // BarlowSemiCondensed-Bold
+    case 'bold':
+      return generator.getBoldFont();     // Barlow-Bold
+    case 'regular':
+    default:
+      return generator.getFont();         // Barlow-Regular
   }
 }
 
@@ -213,17 +235,22 @@ function renderBlock(
     // Draw text with indent
     const bulletIndent = 15;
     const text = block.text.replace(/\*\*/g, ''); // Remove bold markers for now
+    const font = getFontForStyle(generator, style.fontType);
     y = generator.drawMultilineText(page, text, x + bulletIndent, y, {
       size: style.fontSize,
       color: style.color,
       maxWidth: LAYOUT.content.width - bulletIndent,
       lineHeight: LAYOUT.lineHeight.normal,
-      font: style.isBold ? generator.getBoldFont() : undefined,
+      font,
     });
   } else {
     // For headers and paragraphs
-    const text = block.text.replace(/\*\*/g, ''); // Remove bold markers for now
-    const font = style.isBold ? generator.getBoldFont() : undefined;
+    let text = block.text.replace(/\*\*/g, ''); // Remove bold markers for now
+    // Apply uppercase for h1/h2 per brand guidelines
+    if (style.uppercase) {
+      text = text.toUpperCase();
+    }
+    const font = getFontForStyle(generator, style.fontType);
 
     y = generator.drawMultilineText(page, text, x, y, {
       size: style.fontSize,

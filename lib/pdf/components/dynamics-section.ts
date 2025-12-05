@@ -72,9 +72,10 @@ export function renderDynamicsSection(
       borderWidth: 2,
     });
 
-    // Goal label and value
+    // Goal label and value - BarlowCondensed-Regular for labels, uppercase
     generator.drawText(page, 'CEL NA NOWY MIESIĄC:', x + LAYOUT.spacing.paragraph, y - LAYOUT.spacing.line - LAYOUT.fonts.body, {
       size: LAYOUT.fonts.body,
+      font: generator.getCondensedFont(),
       color: COLORS.text.muted,
     });
 

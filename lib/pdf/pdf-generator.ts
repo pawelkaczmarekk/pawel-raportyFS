@@ -23,8 +23,10 @@ export interface DrawContext {
 export class PDFGenerator {
   private doc: PDFDocument | null = null;
   private templatePath: string;
-  private font: PDFFont | null = null;
-  private boldFont: PDFFont | null = null;
+  private font: PDFFont | null = null;           // Barlow-Regular (treści)
+  private boldFont: PDFFont | null = null;       // Barlow-Bold (treści wyróżnione)
+  private condensedFont: PDFFont | null = null;  // BarlowCondensed-Regular (wstępy, etykiety - wersaliki)
+  private headingFont: PDFFont | null = null;    // BarlowSemiCondensed-Bold (nagłówki - wersaliki)
 
   constructor() {
     this.templatePath = path.join(process.cwd(), 'public/assets/szata-background.pdf');
@@ -38,13 +40,26 @@ export class PDFGenerator {
     // Register fontkit for custom fonts (required for TTF embedding)
     this.doc.registerFontkit(fontkit);
 
-    // Embed Roboto font (supports Polish characters via Unicode)
-    const fontPath = path.join(process.cwd(), 'public/fonts/Roboto-Regular.ttf');
-    const boldFontPath = path.join(process.cwd(), 'public/fonts/Roboto-Bold.ttf');
+    // Embed Barlow font family (supports Polish characters via Unicode)
+    // Brand guidelines:
+    // - Barlow Condensed Regular: wstępy i etykiety (wersaliki, światło 50)
+    // - Barlow Semi Condensed Bold: nagłówki i przyciski (wersaliki)
+    // - Barlow Regular: treści
+    // - Barlow Bold: treści wyróżnione
+    const fontPath = path.join(process.cwd(), 'public/fonts/Barlow-Regular.ttf');
+    const boldFontPath = path.join(process.cwd(), 'public/fonts/Barlow-Bold.ttf');
+    const condensedFontPath = path.join(process.cwd(), 'public/fonts/BarlowCondensed-Regular.ttf');
+    const headingFontPath = path.join(process.cwd(), 'public/fonts/BarlowSemiCondensed-Bold.ttf');
+
     const fontBytes = fs.readFileSync(fontPath);
     const boldFontBytes = fs.readFileSync(boldFontPath);
+    const condensedFontBytes = fs.readFileSync(condensedFontPath);
+    const headingFontBytes = fs.readFileSync(headingFontPath);
+
     this.font = await this.doc.embedFont(fontBytes);
     this.boldFont = await this.doc.embedFont(boldFontBytes);
+    this.condensedFont = await this.doc.embedFont(condensedFontBytes);
+    this.headingFont = await this.doc.embedFont(headingFontBytes);
   }
 
   getDocument(): PDFDocument {
@@ -66,6 +81,22 @@ export class PDFGenerator {
       throw new Error('Bold font not initialized. Call initialize() first.');
     }
     return this.boldFont;
+  }
+
+  // BarlowCondensed-Regular for labels and intros (uppercase, letter-spacing 50)
+  getCondensedFont(): PDFFont {
+    if (!this.condensedFont) {
+      throw new Error('Condensed font not initialized. Call initialize() first.');
+    }
+    return this.condensedFont;
+  }
+
+  // BarlowSemiCondensed-Bold for headings (uppercase)
+  getHeadingFont(): PDFFont {
+    if (!this.headingFont) {
+      throw new Error('Heading font not initialized. Call initialize() first.');
+    }
+    return this.headingFont;
   }
 
   getFirstPage(): PDFPage {
@@ -223,24 +254,25 @@ export class PDFGenerator {
     return y;
   }
 
-  // Draw a section header
+  // Draw a section header using BarlowSemiCondensed-Bold (uppercase)
   drawSectionHeader(
     page: PDFPage,
     title: string,
     x: number,
     y: number
   ): number {
-    // Draw section number and title
-    page.drawText(title, {
+    // Use headingFont (BarlowSemiCondensed-Bold) and convert to uppercase per brand guidelines
+    const uppercaseTitle = title.toUpperCase();
+    page.drawText(uppercaseTitle, {
       x,
       y,
       size: LAYOUT.fonts.heading,
-      font: this.boldFont!,
+      font: this.headingFont!,
       color: rgb(COLORS.primary.r, COLORS.primary.g, COLORS.primary.b),
     });
 
     // Draw underline (scaled)
-    const titleWidth = this.boldFont!.widthOfTextAtSize(title, LAYOUT.fonts.heading);
+    const titleWidth = this.headingFont!.widthOfTextAtSize(uppercaseTitle, LAYOUT.fonts.heading);
     const underlineOffset = LAYOUT.spacing.line;
     page.drawLine({
       start: { x, y: y - underlineOffset },
@@ -301,12 +333,12 @@ export class PDFGenerator {
         borderWidth: 1,
       });
 
-      // Draw label (positioned at top of cell)
-      page.drawText(metric.label, {
+      // Draw label (positioned at top of cell) - use BarlowCondensed-Regular, uppercase
+      page.drawText(metric.label.toUpperCase(), {
         x: cellX + cellPadding,
         y: y - cellPadding - LAYOUT.fonts.small,
         size: LAYOUT.fonts.small,
-        font: this.font!,
+        font: this.condensedFont!,
         color: rgb(COLORS.text.muted.r, COLORS.text.muted.g, COLORS.text.muted.b),
       });
 

@@ -67,7 +67,7 @@ export async function generateMonthlyPDF(data: MonthlyPDFData): Promise<Buffer> 
     .map(t => t.name);
 
   const combinedActions = [...allActions, ...clickupActions];
-  const actionsToRender = combinedActions.length > 0 ? combinedActions : ['Brak zarejestrowanych dzialan w tym okresie'];
+  const actionsToRender = combinedActions.length > 0 ? combinedActions : ['Brak zarejestrowanych działań w tym okresie'];
 
   // Estimate page 1 content height for background
   const headerHeight = LAYOUT.fonts.title * 1.5 + LAYOUT.fonts.subheading * 3 + LAYOUT.spacing.section * 2;
@@ -79,8 +79,8 @@ export async function generateMonthlyPDF(data: MonthlyPDFData): Promise<Buffer> 
 
   // 1. Header
   y = renderHeader(generator, currentPage, {
-    title: 'RAPORT PROWADZENIA DZIALAN NA KONCIE',
-    subtitle: `Raport Miesieczny | ${formatMonthYear(dateRange.start)}`,
+    title: 'RAPORT PROWADZENIA DZIAŁAŃ NA KONCIE',
+    subtitle: `Raport Miesięczny | ${formatMonthYear(dateRange.start)}`,
     partnerName: partner.nazwaKonta,
     dateRange,
     opiekun: partner.opiekun,

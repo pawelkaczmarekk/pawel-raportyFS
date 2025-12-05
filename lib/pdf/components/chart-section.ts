@@ -50,17 +50,17 @@ export async function generateHistoricalChart(data: ChartData): Promise<Buffer |
     console.log(`[Chart] Values (tys.):`, salesInThousands);
     console.log(`[Chart] Average:`, Math.round(average));
 
-    // Highlight last month (most recent) with different color - Orange theme
+    // Highlight last month (most recent) with different color - Official vSprint orange #ff5c0a
     const backgroundColors = salesInThousands.map((_, index) =>
       index === salesInThousands.length - 1
-        ? 'rgba(255, 127, 80, 0.95)'   // Coral orange for last month
-        : 'rgba(255, 127, 80, 0.65)'   // Lighter orange for others
+        ? 'rgba(255, 92, 10, 0.95)'    // Official vSprint orange for last month
+        : 'rgba(255, 92, 10, 0.65)'    // Lighter vSprint orange for others
     );
 
     const borderColors = salesInThousands.map((_, index) =>
       index === salesInThousands.length - 1
-        ? 'rgba(230, 100, 50, 1)'
-        : 'rgba(255, 127, 80, 0.85)'
+        ? 'rgba(230, 80, 8, 1)'        // Darker vSprint orange border
+        : 'rgba(255, 92, 10, 0.85)'    // vSprint orange border
     );
 
     const chartConfig = {

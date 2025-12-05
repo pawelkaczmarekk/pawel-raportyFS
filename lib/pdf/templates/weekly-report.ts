@@ -65,7 +65,7 @@ export async function generateWeeklyPDF(data: WeeklyPDFData): Promise<Buffer> {
     .filter(t => t.status?.status?.toLowerCase().includes('complete') || t.status?.status?.toLowerCase().includes('closed'))
     .map(t => t.name);
   const combinedActions = [...userActions, ...clickupActions];
-  const actionsToRender = combinedActions.length > 0 ? combinedActions : ['Brak zarejestrowanych dzialan w tym okresie'];
+  const actionsToRender = combinedActions.length > 0 ? combinedActions : ['Brak zarejestrowanych działań w tym okresie'];
 
   // Estimate total page 1 content height for dynamic background
   const headerHeight = LAYOUT.fonts.title * 1.5 + LAYOUT.fonts.subheading * 3 + LAYOUT.spacing.section * 2;
@@ -78,7 +78,7 @@ export async function generateWeeklyPDF(data: WeeklyPDFData): Promise<Buffer> {
 
   // 1. Header - use current month for weekly reports
   y = renderHeader(generator, page1, {
-    title: 'RAPORT PROWADZENIA DZIALAN NA KONCIE',
+    title: 'RAPORT PROWADZENIA DZIAŁAŃ NA KONCIE',
     subtitle: `Raport Tygodniowy | ${formatDateRange(dateRange.start, dateRange.end)} | Dane: ${formatCurrentMonth()}`,
     partnerName: partner.nazwaKonta,
     dateRange,

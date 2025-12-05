@@ -60,9 +60,10 @@ export function renderSalesSection(
       borderWidth: 2,
     });
 
-    // Country label
-    generator.drawText(page, country.label, cellX + cellPadding, y - cellPadding - LAYOUT.fonts.small, {
+    // Country label - BarlowCondensed-Regular, uppercase per brand guidelines
+    generator.drawText(page, country.label.toUpperCase(), cellX + cellPadding, y - cellPadding - LAYOUT.fonts.small, {
       size: LAYOUT.fonts.small,
+      font: generator.getCondensedFont(),
       color: COLORS.text.muted,
     });
 
@@ -87,9 +88,10 @@ export function renderSalesSection(
     color: rgb(COLORS.primary.r, COLORS.primary.g, COLORS.primary.b),
   });
 
+  // Use BarlowSemiCondensed-Bold for header text
   generator.drawText(page, 'SUMA:', x + cellPadding, y - sumaBoxHeight / 2 - LAYOUT.fonts.subheading / 3, {
     size: LAYOUT.fonts.subheading,
-    font: generator.getBoldFont(),
+    font: generator.getHeadingFont(),
     color: COLORS.text.white,
   });
 
