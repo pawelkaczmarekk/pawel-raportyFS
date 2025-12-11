@@ -27,7 +27,7 @@ const SHEET_COLUMN_MAPPING = {
   W: 'zwrotZAdsPoprzedniMiesiac',
   X: 'zwrotZAds',
   Y: 'oczekiwanyZwrotZAds',
-  Z: 'zgodnosc',
+  // Z: zgodnosc - REMOVED
   AA: 'udzialAdsWPrzychodach',
   AB: 'sumaProwizji',
   AC: 'dopuszczalnaProwizja',
@@ -177,7 +177,7 @@ export class SheetsService {
       zwrotZAdsPoprzedniMiesiac: this.parseNumber(row[22]),
       zwrotZAds: this.parseNumber(row[23]),
       oczekiwanyZwrotZAds: this.parseNumber(row[24]),
-      zgodnosc: row[25] || '',
+      // zgodnosc: row[25] - REMOVED
       udzialAdsWPrzychodach: row[26] || '',
       sumaProwizji: this.parseNumber(row[27]),
       dopuszczalnaProwizja: this.parseNumber(row[28]),
