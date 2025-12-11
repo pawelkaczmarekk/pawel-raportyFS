@@ -50,7 +50,6 @@ METRYKI ADS
 • Koszt ADS: ${partner.kosztAds?.toLocaleString('pl-PL')} PLN
 • Przychód ADS: ${partner.przychodAds?.toLocaleString('pl-PL')} PLN
 • Zwrot z ADS: ${partner.zwrotZAds}x
-• Zgodność z celem: ${partner.zgodnosc}
 
 ═══════════════════════════════════════════════════════════════
 WYKONANE ZADANIA (ClickUp)
