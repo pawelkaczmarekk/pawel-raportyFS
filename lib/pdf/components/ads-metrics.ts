@@ -7,6 +7,7 @@ export interface AdsMetricsData {
   kosztAds: number;
   przychodAds: number;
   zwrotZAds: number;
+  oczekiwanyZwrotZAds: number;
   udzialAdsWPrzychodach: string;
 }
 
@@ -33,13 +34,14 @@ export function renderAdsMetrics(
   y = generator.drawSectionHeader(page, '4. Metryki Allegro ADS', x, y);
   y -= LAYOUT.spacing.paragraph;
 
-  // Metrics grid - 2 rows x 3 columns (4 metrics total)
+  // Metrics grid - 2 rows x 3 columns (5 metrics total)
   const metrics = [
     // Row 1
     { label: 'Koszt ADS', value: formatCurrency(data.kosztAds) },
     { label: 'Przychód ADS', value: formatCurrency(data.przychodAds) },
     { label: 'Zwrot z ADS', value: formatROI(data.zwrotZAds) },
     // Row 2
+    { label: 'Oczekiwany zwrot', value: formatROI(data.oczekiwanyZwrotZAds) },
     { label: 'Udział ADS', value: data.udzialAdsWPrzychodach || '-' },
   ];
 

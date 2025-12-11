@@ -79,8 +79,6 @@ export async function generateMonthlyPDF(data: MonthlyPDFData): Promise<Buffer> 
   const aiSummaryHeight = LAYOUT.fonts.heading * 1.5 + generator.estimateTextHeight(aiContent, LAYOUT.fonts.body, LAYOUT.content.width) + LAYOUT.spacing.section * 2;
   const totalPage1Height = headerHeight + actionsHeight + aiSummaryHeight + LAYOUT.spacing.paragraph * 4;
 
-  generator.drawContentBackground(currentPage, startY + LAYOUT.spacing.section, totalPage1Height, 0.92);
-
   // 1. Header
   y = renderHeader(generator, currentPage, {
     title: 'RAPORT PROWADZENIA DZIAŁAŃ NA KONCIE',
@@ -107,9 +105,6 @@ export async function generateMonthlyPDF(data: MonthlyPDFData): Promise<Buffer> 
   while (overflowBlocks.length > 0) {
     currentPage = await generator.addPage();
     const overflowStartY = fromTop(topOffset);
-
-    // Draw background for new page
-    generator.drawContentBackground(currentPage, overflowStartY + LAYOUT.spacing.section, LAYOUT.page.height * 0.75, 0.92);
 
     const overflowResult = renderAISummaryOverflow(
       generator,
@@ -145,7 +140,6 @@ export async function generateMonthlyPDF(data: MonthlyPDFData): Promise<Buffer> 
   if (needsNewPage(y, salesSectionHeight)) {
     currentPage = await generator.addPage();
     y = fromTop(topOffset);
-    generator.drawContentBackground(currentPage, y + LAYOUT.spacing.section, LAYOUT.page.height * 0.75, 0.92);
   }
 
   // 4. Sales section
@@ -163,7 +157,6 @@ export async function generateMonthlyPDF(data: MonthlyPDFData): Promise<Buffer> 
   if (needsNewPage(y, adsSectionHeight)) {
     currentPage = await generator.addPage();
     y = fromTop(topOffset);
-    generator.drawContentBackground(currentPage, y + LAYOUT.spacing.section, LAYOUT.page.height * 0.75, 0.92);
   }
 
   // 5. ADS Metrics
@@ -179,7 +172,6 @@ export async function generateMonthlyPDF(data: MonthlyPDFData): Promise<Buffer> 
   if (needsNewPage(y, dynamicsSectionHeight)) {
     currentPage = await generator.addPage();
     y = fromTop(topOffset);
-    generator.drawContentBackground(currentPage, y + LAYOUT.spacing.section, LAYOUT.page.height * 0.75, 0.92);
   }
 
   // 6. Dynamics section
@@ -198,7 +190,6 @@ export async function generateMonthlyPDF(data: MonthlyPDFData): Promise<Buffer> 
     if (needsNewPage(y, chartSectionHeight)) {
       currentPage = await generator.addPage();
       y = fromTop(topOffset);
-      generator.drawContentBackground(currentPage, y + LAYOUT.spacing.section, LAYOUT.page.height * 0.75, 0.92);
     }
 
     console.log(`[MonthlyPDF] Rendering chart at y position: ${y}`);

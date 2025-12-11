@@ -78,9 +78,6 @@ export async function generateWeeklyPDF(data: WeeklyPDFData): Promise<Buffer> {
   const aiSummaryHeight = LAYOUT.fonts.heading * 1.5 + generator.estimateTextHeight(aiContent, LAYOUT.fonts.body, LAYOUT.content.width) + LAYOUT.spacing.section * 2;
   const totalPage1Height = headerHeight + actionsHeight + aiSummaryHeight + LAYOUT.spacing.paragraph * 4;
 
-  // Draw dynamic background FIRST (before content)
-  generator.drawContentBackground(page1, startY + LAYOUT.spacing.section, totalPage1Height, 0.92);
-
   // 1. Header - use current month for weekly reports
   y = renderHeader(generator, page1, {
     title: 'RAPORT PROWADZENIA DZIAŁAŃ NA KONCIE',
@@ -113,9 +110,6 @@ export async function generateWeeklyPDF(data: WeeklyPDFData): Promise<Buffer> {
   const adsHeight = LAYOUT.fonts.heading * 1.5 + LAYOUT.table.rowHeight * 4 + LAYOUT.spacing.section * 2;
   const dynamicsHeight = LAYOUT.fonts.heading * 1.5 + LAYOUT.table.rowHeight * 4 + LAYOUT.spacing.section * 2;
   const totalPage2Height = salesHeight + adsHeight + dynamicsHeight + LAYOUT.spacing.paragraph * 4;
-
-  // Draw dynamic background for page 2
-  generator.drawContentBackground(page2, page2StartY + LAYOUT.spacing.section, totalPage2Height, 0.92);
 
   // Get previous month comparison
   const previousMonthDate = new Date();

@@ -12,7 +12,7 @@ export const LAYOUT = {
   // Margins (scaled up from A4)
   margin: {
     top: 100 * SCALE,
-    bottom: 100 * SCALE,
+    bottom: 180 * SCALE,  // Increased bottom margin to avoid footer graphics
     left: 100 * SCALE,
     right: 100 * SCALE,
   },
