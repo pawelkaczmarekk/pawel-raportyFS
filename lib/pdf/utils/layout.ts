@@ -1,12 +1,12 @@
-// PDF Layout constants - Using actual template size (szata-background.pdf)
-// Template is 2684.25 x 3506.25 points (about 4.5x larger than A4)
-const SCALE = 4.5; // Scale factor compared to A4
+// PDF Layout constants - Using actual template size (szata-background.png)
+// Template is 3579 x 4675 pixels (about 6x larger than A4)
+const SCALE = 6; // Scale factor compared to A4
 
 export const LAYOUT = {
-  // Actual template page dimensions in points
+  // Actual template page dimensions in points (matching PNG dimensions)
   page: {
-    width: 2684.25,
-    height: 3506.25,
+    width: 3579,
+    height: 4675,
   },
 
   // Margins (scaled up from A4)
@@ -19,9 +19,9 @@ export const LAYOUT = {
 
   // Content area
   content: {
-    width: 2684.25 - (100 * SCALE * 2),  // page.width - left - right margins
+    width: 3579 - (100 * SCALE * 2),  // page.width - left - right margins
     startX: 100 * SCALE,
-    startY: 3506.25 - (100 * SCALE), // page.height - top margin
+    startY: 4675 - (100 * SCALE), // page.height - top margin
   },
 
   // Font sizes (scaled up for larger page)

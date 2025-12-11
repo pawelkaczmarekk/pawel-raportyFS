@@ -141,7 +141,6 @@ export async function generateWeeklyPDF(data: WeeklyPDFData): Promise<Buffer> {
     przychodAds: partner.przychodAds,
     zwrotZAds: partner.zwrotZAds,
     oczekiwanyZwrotZAds: partner.oczekiwanyZwrotZAds,
-    zgodnosc: partner.zgodnosc,
     udzialAdsWPrzychodach: partner.udzialAdsWPrzychodach,
   }, y);
 

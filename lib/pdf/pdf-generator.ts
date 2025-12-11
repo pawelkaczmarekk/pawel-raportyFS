@@ -23,20 +23,24 @@ export interface DrawContext {
 
 export class PDFGenerator {
   private doc: PDFDocument | null = null;
-  private templatePath: string;
+  private backgroundImagePath: string;
+  private backgroundImage: any = null;
   private font: PDFFont | null = null;           // Barlow-Regular (treści)
   private boldFont: PDFFont | null = null;       // Barlow-Bold (treści wyróżnione)
   private condensedFont: PDFFont | null = null;  // BarlowCondensed-Regular (wstępy, etykiety - wersaliki)
   private headingFont: PDFFont | null = null;    // BarlowSemiCondensed-Bold (nagłówki - wersaliki)
 
   constructor() {
-    this.templatePath = path.join(process.cwd(), 'public/assets/szata-background.pdf');
+    this.backgroundImagePath = path.join(process.cwd(), 'public/assets/szata-background.png');
   }
 
   async initialize(): Promise<void> {
-    // Load the template PDF
-    const templateBytes = fs.readFileSync(this.templatePath);
-    this.doc = await PDFDocument.load(templateBytes);
+    // Create a new PDF document
+    this.doc = await PDFDocument.create();
+
+    // Load and embed the PNG background image
+    const backgroundBytes = fs.readFileSync(this.backgroundImagePath);
+    this.backgroundImage = await this.doc.embedPng(backgroundBytes);
 
     // Register fontkit for custom fonts (required for TTF embedding)
     this.doc.registerFontkit(fontkit);
@@ -104,7 +108,31 @@ export class PDFGenerator {
     if (!this.doc) {
       throw new Error('PDF not initialized. Call initialize() first.');
     }
+    // If no pages exist, create the first page with background
+    if (this.doc.getPageCount() === 0) {
+      return this.createPageWithBackground();
+    }
     return this.doc.getPages()[0];
+  }
+
+  // Helper method to create a new page with PNG background
+  private createPageWithBackground(): PDFPage {
+    if (!this.doc || !this.backgroundImage) {
+      throw new Error('PDF not initialized. Call initialize() first.');
+    }
+
+    // Create a new page with the layout dimensions
+    const page = this.doc.addPage([LAYOUT.page.width, LAYOUT.page.height]);
+
+    // Draw the background image to cover the entire page
+    page.drawImage(this.backgroundImage, {
+      x: 0,
+      y: 0,
+      width: LAYOUT.page.width,
+      height: LAYOUT.page.height,
+    });
+
+    return page;
   }
 
   async addPage(): Promise<PDFPage> {
@@ -112,13 +140,8 @@ export class PDFGenerator {
       throw new Error('PDF not initialized. Call initialize() first.');
     }
 
-    // Copy the first page (template) to create new page with same background
-    const templateBytes = fs.readFileSync(this.templatePath);
-    const templateDoc = await PDFDocument.load(templateBytes);
-    const [copiedPage] = await this.doc.copyPages(templateDoc, [0]);
-    this.doc.addPage(copiedPage);
-
-    return copiedPage;
+    // Create a new page with the PNG background
+    return this.createPageWithBackground();
   }
 
   // Draw text at specific position

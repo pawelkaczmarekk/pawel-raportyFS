@@ -172,7 +172,6 @@ export async function generateMonthlyPDF(data: MonthlyPDFData): Promise<Buffer> 
     przychodAds: partner.przychodAds,
     zwrotZAds: partner.zwrotZAds,
     oczekiwanyZwrotZAds: partner.oczekiwanyZwrotZAds,
-    zgodnosc: partner.zgodnosc,
     udzialAdsWPrzychodach: partner.udzialAdsWPrzychodach,
   }, y);
 
