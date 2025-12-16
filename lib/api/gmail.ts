@@ -1,12 +1,12 @@
 import { google } from 'googleapis';
-import { EmailTemplate, EmailTemplateWithAttachment, EmailAttachment } from '@/types';
+import { createMimeMessage, Mailbox } from 'mimetext';
+import { EmailTemplate, EmailTemplateWithAttachment } from '@/types';
 
 export class GmailService {
   private clientId: string;
   private clientSecret: string;
 
   constructor() {
-    // Use the same OAuth client as NextAuth
     this.clientId = process.env.GOOGLE_CLIENT_ID!;
     this.clientSecret = process.env.GOOGLE_CLIENT_SECRET!;
 
@@ -15,14 +15,10 @@ export class GmailService {
     }
   }
 
-  /**
-   * Send email using user's refresh token from their session
-   * @param emailData Email content and recipient
-   * @param refreshToken User's OAuth refresh token from NextAuth session
-   */
   async sendEmail(emailData: EmailTemplate, refreshToken: string): Promise<boolean> {
+    console.log('[Gmail] Sending email with subject:', emailData.subject);
+
     try {
-      // Create OAuth2 client with user's refresh token
       const auth = new google.auth.OAuth2(
         this.clientId,
         this.clientSecret,
@@ -34,12 +30,24 @@ export class GmailService {
       });
 
       const gmail = google.gmail({ version: 'v1', auth });
-      const message = this.createMessage(emailData);
+
+      // Use mimetext for proper MIME encoding (handles UTF-8 subjects correctly)
+      const msg = createMimeMessage();
+      msg.setSender(emailData.to); // Gmail will override with authenticated user
+      msg.setRecipient(emailData.to);
+      msg.setSubject(emailData.subject);
+      msg.addMessage({
+        contentType: 'text/html',
+        data: emailData.html,
+      });
+
+      // Use asRaw() + standard base64 (NOT asEncoded() which returns base64url)
+      const raw = Buffer.from(msg.asRaw()).toString('base64');
 
       await gmail.users.messages.send({
         userId: 'me',
         requestBody: {
-          raw: message,
+          raw: raw,
         },
       });
 
@@ -51,38 +59,13 @@ export class GmailService {
     }
   }
 
-  private createMessage(emailData: EmailTemplate): string {
-    // Encode subject for UTF-8 support (Polish characters)
-    const encodedSubject = `=?UTF-8?B?${Buffer.from(emailData.subject, 'utf-8').toString('base64')}?=`;
-
-    const message = [
-      'MIME-Version: 1.0',
-      `To: ${emailData.to}`,
-      `Subject: ${encodedSubject}`,
-      'Content-Type: text/html; charset=utf-8',
-      'Content-Transfer-Encoding: base64',
-      '',
-      Buffer.from(emailData.html, 'utf-8').toString('base64'),
-    ].join('\r\n');
-
-    return Buffer.from(message, 'utf-8')
-      .toString('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '');
-  }
-
-  /**
-   * Send email with attachments using user's refresh token
-   * @param emailData Email content, recipient, and attachments
-   * @param refreshToken User's OAuth refresh token from NextAuth session
-   */
   async sendEmailWithAttachment(
     emailData: EmailTemplateWithAttachment,
     refreshToken: string
   ): Promise<boolean> {
+    console.log('[Gmail] Sending email with attachment, subject:', emailData.subject);
+
     try {
-      // Create OAuth2 client with user's refresh token
       const auth = new google.auth.OAuth2(
         this.clientId,
         this.clientSecret,
@@ -94,12 +77,36 @@ export class GmailService {
       });
 
       const gmail = google.gmail({ version: 'v1', auth });
-      const message = this.createMessageWithAttachment(emailData);
+
+      // Use mimetext for proper MIME encoding
+      const msg = createMimeMessage();
+      msg.setSender(emailData.to); // Gmail will override with authenticated user
+      msg.setRecipient(emailData.to);
+      msg.setSubject(emailData.subject);
+      msg.addMessage({
+        contentType: 'text/html',
+        data: emailData.html,
+      });
+
+      // Add attachments
+      if (emailData.attachments && emailData.attachments.length > 0) {
+        for (const attachment of emailData.attachments) {
+          msg.addAttachment({
+            filename: attachment.filename,
+            contentType: attachment.contentType,
+            data: attachment.content.toString('base64'),
+            encoding: 'base64',
+          });
+        }
+      }
+
+      // Use asRaw() + standard base64 (NOT asEncoded() which returns base64url)
+      const raw = Buffer.from(msg.asRaw()).toString('base64');
 
       await gmail.users.messages.send({
         userId: 'me',
         requestBody: {
-          raw: message,
+          raw: raw,
         },
       });
 
@@ -109,56 +116,6 @@ export class GmailService {
       console.error('Error sending email with attachment:', error);
       return false;
     }
-  }
-
-  private createMessageWithAttachment(emailData: EmailTemplateWithAttachment): string {
-    const boundary = `boundary_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-
-    // Encode subject for UTF-8 support
-    const encodedSubject = `=?UTF-8?B?${Buffer.from(emailData.subject).toString('base64')}?=`;
-
-    // Build MIME multipart message
-    const messageParts: string[] = [
-      'MIME-Version: 1.0',
-      `To: ${emailData.to}`,
-      `Subject: ${encodedSubject}`,
-      `Content-Type: multipart/mixed; boundary="${boundary}"`,
-      '',
-      `--${boundary}`,
-      'Content-Type: text/html; charset=utf-8',
-      'Content-Transfer-Encoding: base64',
-      '',
-      Buffer.from(emailData.html).toString('base64'),
-    ];
-
-    // Add attachments
-    if (emailData.attachments && emailData.attachments.length > 0) {
-      for (const attachment of emailData.attachments) {
-        // Encode filename for UTF-8 support
-        const encodedFilename = `=?UTF-8?B?${Buffer.from(attachment.filename).toString('base64')}?=`;
-
-        messageParts.push(
-          `--${boundary}`,
-          `Content-Type: ${attachment.contentType}; name="${encodedFilename}"`,
-          'Content-Transfer-Encoding: base64',
-          `Content-Disposition: attachment; filename="${encodedFilename}"`,
-          '',
-          attachment.content.toString('base64')
-        );
-      }
-    }
-
-    // Close boundary
-    messageParts.push(`--${boundary}--`);
-
-    const message = messageParts.join('\r\n');
-
-    // Encode entire message for Gmail API (URL-safe base64)
-    return Buffer.from(message)
-      .toString('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '');
   }
 }
 

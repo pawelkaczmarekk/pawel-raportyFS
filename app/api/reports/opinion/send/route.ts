@@ -30,13 +30,17 @@ export async function POST(request: NextRequest) {
 
     console.log(`[OpinionRequest-Send] Sending request for ${partnerName}`);
 
+    const subject = `Prosba o opinie - ${reportData.partner.nazwaKonta}`;
+    console.log('[OpinionRequest-Send] Subject:', subject);
+    console.log('[OpinionRequest-Send] Subject hex:', Buffer.from(subject).toString('hex'));
+
     // Send email using user's refresh token from session
-    // TESTOWANIE: Wysyłka na email zalogowanej osoby zamiast partnera
+    // Use sendEmail (no attachments needed for opinion requests)
     const sent = await gmailService.sendEmail(
       {
-        to: session.user.email, // Zmienione z partner.opiekunFsEmail dla testów
-        subject: `Prośba o opinię - ${reportData.partner.nazwaKonta}`,
-        html: aiContent, // Use the edited HTML from editor
+        to: session.user.email, // TODO: zmień na reportData.partner.opiekunFsEmail dla produkcji
+        subject: subject,
+        html: aiContent,
       },
       session.refreshToken
     );

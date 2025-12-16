@@ -21,8 +21,10 @@
     "@tiptap/starter-kit": "^3.11.0",
     "date-fns": "^4.1.0",
     "googleapis": "^166.0.0",
+    "mimetext": "^3.0.27",
     "next": "^16.0.8",
     "next-auth": "^4.24.13",
+    "nodemailer": "^7.0.11",
     "pdf-lib": "^1.17.1",
     "pdfkit": "^0.17.2",
     "react": "19.2.0",
@@ -34,6 +36,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/nodemailer": "^7.0.4",
     "@types/pdfkit": "^0.17.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
