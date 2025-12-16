@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth';
 import { sheetsService } from '@/lib/api/sheets';
 import { opinionsService } from '@/lib/api/opinions';
 import { generateOpinionRequestEmail } from '@/lib/templates/email';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,12 +40,25 @@ export async function POST(request: NextRequest) {
     // Get base URL
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
 
-    // Generate email HTML with token
+    // Read banner image and convert to base64 for email embedding
+    let bannerBase64: string | undefined;
+    try {
+      const bannerPath = path.join(process.cwd(), 'public', 'assets', 'ankieta-banner.jpg');
+      if (fs.existsSync(bannerPath)) {
+        const bannerBuffer = fs.readFileSync(bannerPath);
+        bannerBase64 = bannerBuffer.toString('base64');
+      }
+    } catch (err) {
+      console.warn('Could not read banner image:', err);
+    }
+
+    // Generate email HTML with token and embedded banner
     const emailHtml = generateOpinionRequestEmail(
       partner,
       session.user.email,
       token,
-      baseUrl
+      baseUrl,
+      bannerBase64
     );
 
     console.log(`[OpinionRequest-Generate] Request generated for ${partnerName}`);
@@ -65,6 +80,8 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+
 
 
 

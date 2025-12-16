@@ -30,27 +30,20 @@ export async function GET(
       );
     }
 
-    // Mark as used in Google Sheets first
+    // Mark as used in Google Sheets (saves rating, timestamp, sets used=TRUE)
     await opinionsService.markAsUsed(token, rating);
 
-    // Build Typeform URL with pre-filled data (hidden fields)
-    const typeformBaseUrl = process.env.NEXT_PUBLIC_TYPEFORM_BASE_URL || 'https://form.typeform.com/to';
-    const typeformFormId = process.env.NEXT_PUBLIC_TYPEFORM_FORM_ID || 'P1eKSzbs';
-
-    const typeformUrl = new URL(`${typeformBaseUrl}/${typeformFormId}`);
-    // Pre-fill hidden fields - these need to match your Typeform field names
-    typeformUrl.searchParams.set('rating', rating.toString());
-    typeformUrl.searchParams.set('email', record.partnerEmail);
-    typeformUrl.searchParams.set('partner', record.partnerName);
-
-    console.log('[Opinion] Redirecting to Typeform with pre-filled data:', {
+    console.log('[Opinion] Vote saved to Google Sheets:', {
       rating,
-      email: record.partnerEmail,
       partner: record.partnerName,
+      token,
     });
 
-    // Redirect to Typeform - user will see the form and can submit
-    return NextResponse.redirect(typeformUrl);
+    // Redirect to thank-you page with rating
+    const thankYouUrl = new URL('/opinion/thank-you', request.url);
+    thankYouUrl.searchParams.set('rating', rating.toString());
+
+    return NextResponse.redirect(thankYouUrl);
   } catch (error) {
     console.error('Error processing opinion submission:', error);
     return NextResponse.redirect(new URL('/opinion/error', request.url));

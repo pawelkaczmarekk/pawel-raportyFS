@@ -52,16 +52,20 @@ export class GmailService {
   }
 
   private createMessage(emailData: EmailTemplate): string {
+    // Encode subject for UTF-8 support (Polish characters)
+    const encodedSubject = `=?UTF-8?B?${Buffer.from(emailData.subject, 'utf-8').toString('base64')}?=`;
+
     const message = [
-      'Content-Type: text/html; charset=utf-8',
       'MIME-Version: 1.0',
       `To: ${emailData.to}`,
-      `Subject: ${emailData.subject}`,
+      `Subject: ${encodedSubject}`,
+      'Content-Type: text/html; charset=utf-8',
+      'Content-Transfer-Encoding: base64',
       '',
-      emailData.html,
-    ].join('\n');
+      Buffer.from(emailData.html, 'utf-8').toString('base64'),
+    ].join('\r\n');
 
-    return Buffer.from(message)
+    return Buffer.from(message, 'utf-8')
       .toString('base64')
       .replace(/\+/g, '-')
       .replace(/\//g, '_')

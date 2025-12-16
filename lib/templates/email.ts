@@ -433,116 +433,103 @@ export function generateWeeklyReportEmail(
 }
 
 export function generateOpinionRequestEmail(
-  partner: Partner,
-  opiekunEmail: string,
+  _partner: Partner,
+  _opiekunEmail: string,
   token: string,
-  baseUrl: string
+  baseUrl: string,
+  bannerBase64?: string
 ): string {
-  const generateStarLink = (rating: number) => {
-    const stars = '⭐'.repeat(rating);
-    const url = `${baseUrl}/api/opinion/submit/${token}?stars=${rating}`;
-    return `<a href="${url}" style="text-decoration: none; font-size: 32px; margin: 0 5px; display: inline-block; padding: 10px; background: #f8f9fa; border-radius: 8px; transition: all 0.2s;">${stars}</a>`;
+  // Generate star rating table with proper alignment
+  const generateStarRatingTable = () => {
+    const cells = [1, 2, 3, 4, 5].map((rating) => {
+      const url = `${baseUrl}/api/opinion/submit/${token}?stars=${rating}`;
+      return `
+        <td style="text-align: center; padding: 0 15px;">
+          <a href="${url}" style="text-decoration: none; display: block;">
+            <div style="font-size: 28px; line-height: 1;">⭐</div>
+            <div style="font-size: 14px; color: #333; font-weight: bold; margin-top: 5px;">${rating}</div>
+          </a>
+        </td>
+      `;
+    }).join('');
+
+    return `<table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;"><tr>${cells}</tr></table>`;
   };
 
-  const starLinks = [1, 2, 3, 4, 5]
-    .map((rating) => generateStarLink(rating))
-    .join(' ');
+  // Banner image - use base64 if provided, otherwise URL
+  const bannerSrc = bannerBase64
+    ? `data:image/jpeg;base64,${bannerBase64}`
+    : (process.env.OPINION_BANNER_IMAGE_URL || `${baseUrl}/assets/ankieta-banner.jpg`);
 
   return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .header {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      color: white;
-      padding: 30px;
-      border-radius: 10px;
-      margin-bottom: 30px;
-      text-align: center;
-    }
-    .header h1 {
-      margin: 0 0 10px 0;
-      font-size: 28px;
-    }
-    .content {
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      border: 1px solid #e0e0e0;
-      text-align: center;
-    }
-    .rating-section {
-      background: #f8f9fa;
-      padding: 30px;
-      border-radius: 8px;
-      margin: 30px 0;
-      text-align: center;
-    }
-    .rating-section h3 {
-      color: #f5576c;
-      margin-bottom: 20px;
-    }
-    .stars {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .footer {
-      text-align: center;
-      color: #666;
-      font-size: 14px;
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #e0e0e0;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body>
-  <div class="header">
-    <h1>💬 Poproś o Opinię</h1>
-    <p>Twoja opinia jest dla nas bardzo ważna!</p>
-  </div>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #ffffff;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 800px; margin: 0 auto; border-collapse: collapse;">
 
-  <div class="content">
-    <h2>Witaj, ${partner.nazwaKonta}!</h2>
-    <p>
-      Chcielibyśmy poznać Twoją opinię na temat naszej współpracy.<br>
-      Jak oceniasz nasze usługi w ostatnim okresie?
-    </p>
+    <!-- Intro Text -->
+    <tr>
+      <td style="padding: 20px; background-color: #ffffff;">
+        <p style="margin: 0 0 10px 0; font-size: 13px; color: #333; line-height: 1.8; font-family: Arial;">Dzień dobry,</p>
+        <p style="margin: 0; font-size: 13px; color: #333; line-height: 1.8; font-family: Arial;">
+          Za nami kolejny miesiąc współpracy. Zależy nam na Państwa opinii, dlatego uprzejmie proszę o chwilę na ocenę naszych działań. Wystarczy kliknąć wybraną gwiazdkę poniżej.
+        </p>
+      </td>
+    </tr>
 
-    <div class="rating-section">
-      <h3>Kliknij na gwiazdki, aby wybrać ocenę:</h3>
-      <div class="stars">
-        ${starLinks}
-      </div>
-      <p style="margin-top: 20px; color: #666; font-size: 14px;">
-        (1 ⭐ = Niezadowolony | 5 ⭐⭐⭐⭐⭐ = Bardzo zadowolony)
-      </p>
-    </div>
+    <!-- Banner Image -->
+    <tr>
+      <td style="padding: 10px 20px; background-color: #ffffff;">
+        <img src="${bannerSrc}" alt="Ankieta Satysfakcji vSprint" style="width: 100%; height: auto; display: block;" />
+      </td>
+    </tr>
 
-    <p>
-      Kliknij na gwiazdki, aby wyrazić swoją opinię.<br>
-      To zajmie tylko chwilę!
-    </p>
-  </div>
+    <!-- Rating Question -->
+    <tr>
+      <td style="padding: 30px 20px 20px 20px; background-color: #ffffff; text-align: center;">
+        <h1 style="margin: 0; font-size: 18px; font-weight: 700; color: #000; font-family: Arial;">
+          Jak oceniasz nasze działania w poprzednim miesiącu?
+        </h1>
+      </td>
+    </tr>
 
-  <div class="footer">
-    <p>Dziękujemy za współpracę!</p>
-    <p>Zespół Vsprint | ${partner.opiekunFsEmail}</p>
-  </div>
+    <!-- Star Rating Table -->
+    <tr>
+      <td style="padding: 20px; background-color: #ffffff; text-align: center;">
+        ${generateStarRatingTable()}
+      </td>
+    </tr>
+
+    <!-- Social Media Icons -->
+    <tr>
+      <td style="padding: 30px 20px; background-color: #ffffff; text-align: center;">
+        <a href="https://www.facebook.com/MarketplaceVsprint" target="_blank" style="display: inline-block; width: 32px; height: 32px; margin: 0 6px; background-color: black; border-radius: 50%; text-align: center; line-height: 32px;">
+          <img src="https://ssl.gstatic.com/atari/images/sociallinks/facebook_white_28dp.png" alt="Facebook" width="28" height="28" style="margin: 2px; vertical-align: middle;" />
+        </a>
+        <a href="https://www.linkedin.com/company/vsprint-kampanie-reklamowe-ads/" target="_blank" style="display: inline-block; width: 32px; height: 32px; margin: 0 6px; background-color: black; border-radius: 50%; text-align: center; line-height: 32px;">
+          <img src="https://ssl.gstatic.com/atari/images/sociallinks/linkedin_white_28dp.png" alt="LinkedIn" width="28" height="28" style="margin: 2px; vertical-align: middle;" />
+        </a>
+        <a href="https://www.instagram.com/vsprint_marketplace/" target="_blank" style="display: inline-block; width: 32px; height: 32px; margin: 0 6px; background-color: black; border-radius: 50%; text-align: center; line-height: 32px;">
+          <img src="https://ssl.gstatic.com/atari/images/sociallinks/instagram_white_28dp.png" alt="Instagram" width="28" height="28" style="margin: 2px; vertical-align: middle;" />
+        </a>
+        <a href="https://www.youtube.com/@vSprint" target="_blank" style="display: inline-block; width: 32px; height: 32px; margin: 0 6px; background-color: black; border-radius: 50%; text-align: center; line-height: 32px;">
+          <img src="https://ssl.gstatic.com/atari/images/sociallinks/youtube_white_28dp.png" alt="YouTube" width="28" height="28" style="margin: 2px; vertical-align: middle;" />
+        </a>
+      </td>
+    </tr>
+
+    <!-- Orange Footer Bar -->
+    <tr>
+      <td style="padding: 0; background-color: #ffffff;">
+        <div style="height: 6px; background-color: #FF4F04;"></div>
+      </td>
+    </tr>
+
+  </table>
 </body>
 </html>
   `.trim();

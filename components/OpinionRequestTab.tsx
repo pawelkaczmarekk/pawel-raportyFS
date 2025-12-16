@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import SearchableSelect from './SearchableSelect';
-import EmailEditorModal from './EmailEditorModal';
 
 interface OpinionRequestTabProps {
   partners: Array<{ id: string; name: string; email: string }>;
@@ -17,8 +16,7 @@ export default function OpinionRequestTab({
 
   // Preview state
   const [reportGenerated, setReportGenerated] = useState(false);
-  const [showEditorModal, setShowEditorModal] = useState(false);
-  const [editableContent, setEditableContent] = useState('');
+  const [previewHtml, setPreviewHtml] = useState('');
   const [reportData, setReportData] = useState<any>(null);
 
   const handleGenerate = async (e: React.FormEvent) => {
@@ -38,10 +36,9 @@ export default function OpinionRequestTab({
       const data = await response.json();
 
       if (response.ok) {
-        setEditableContent(data.aiContent);
+        setPreviewHtml(data.aiContent);
         setReportData(data);
         setReportGenerated(true);
-        setShowEditorModal(true); // Open modal immediately after generation
       } else {
         alert('Błąd: ' + data.error);
       }
@@ -53,7 +50,7 @@ export default function OpinionRequestTab({
     }
   };
 
-  const handleSend = async (editedContent: string) => {
+  const handleSend = async () => {
     if (!reportData) return;
 
     setSending(true);
@@ -64,7 +61,7 @@ export default function OpinionRequestTab({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           partnerName: selectedPartner,
-          aiContent: editedContent,
+          aiContent: previewHtml, // Send original HTML without TipTap processing
           reportData: reportData,
         }),
       });
@@ -76,8 +73,7 @@ export default function OpinionRequestTab({
         // Reset form
         setSelectedPartner('');
         setReportGenerated(false);
-        setShowEditorModal(false);
-        setEditableContent('');
+        setPreviewHtml('');
         setReportData(null);
       } else {
         alert('Błąd: ' + data.error);
@@ -92,8 +88,7 @@ export default function OpinionRequestTab({
 
   const handleCancel = () => {
     setReportGenerated(false);
-    setShowEditorModal(false);
-    setEditableContent('');
+    setPreviewHtml('');
     setReportData(null);
   };
 
@@ -124,7 +119,7 @@ export default function OpinionRequestTab({
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !selectedPartner}
             className="w-full bg-gradient-to-r from-pink-600 to-rose-600 text-white px-6 py-3 rounded-lg hover:from-pink-700 hover:to-rose-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >
             {loading ? (
@@ -142,43 +137,53 @@ export default function OpinionRequestTab({
         </form>
       ) : (
         <div className="space-y-6">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-5">
-            <h3 className="font-semibold text-green-900 mb-2 flex items-center gap-2">
-              <span className="text-2xl">✅</span>
-              <span>Email został wygenerowany!</span>
-            </h3>
-            <p className="text-sm text-green-800">
-              Kliknij przycisk poniżej, aby otworzyć edytor i przejrzeć treść przed wysłaniem.
-            </p>
+          {/* Preview in iframe */}
+          <div className="border border-gray-300 rounded-lg overflow-hidden">
+            <div className="bg-gray-100 px-4 py-2 border-b border-gray-300">
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">Podgląd emaila</span> - Do: {reportData?.partner?.opiekunFsEmail}
+              </p>
+            </div>
+            <iframe
+              srcDoc={previewHtml}
+              className="w-full h-[500px] bg-white"
+              title="Podgląd emaila"
+              sandbox="allow-same-origin"
+            />
           </div>
 
-          <button
-            onClick={() => setShowEditorModal(true)}
-            className="w-full bg-gradient-to-r from-pink-600 to-rose-600 text-white px-6 py-4 rounded-lg hover:from-pink-700 hover:to-rose-700 transition-all font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-lg"
-          >
-            <span>📝</span>
-            <span>Otwórz edytor i wyślij prośbę</span>
-          </button>
-
-          <button
-            onClick={handleCancel}
-            className="w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-all font-medium"
-          >
-            ← Anuluj i wróć do formularza
-          </button>
+          {/* Action buttons */}
+          <div className="flex gap-4">
+            <button
+              onClick={handleCancel}
+              disabled={sending}
+              className="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-all font-medium disabled:opacity-50"
+            >
+              ← Anuluj
+            </button>
+            <button
+              onClick={handleSend}
+              disabled={sending}
+              className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {sending ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Wysyłanie...</span>
+                </>
+              ) : (
+                <>
+                  <span>📧</span>
+                  <span>Wyślij email</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       )}
-
-      {/* Email Editor Modal */}
-      <EmailEditorModal
-        isOpen={showEditorModal && !!editableContent}
-        onClose={handleCancel}
-        onSend={handleSend}
-        initialContent={editableContent}
-        subject={`Prośba o opinię - ${selectedPartner}`}
-        recipientEmail={reportData?.partner?.opiekunFsEmail || ''}
-        isSending={sending}
-      />
     </div>
   );
 }

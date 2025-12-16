@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const sent = await gmailService.sendEmail(
       {
         to: session.user.email, // Zmienione z partner.opiekunFsEmail dla testów
-        subject: `[TEST] Prośba o opinię - ${reportData.partner.nazwaKonta}`,
+        subject: `Prośba o opinię - ${reportData.partner.nazwaKonta}`,
         html: aiContent, // Use the edited HTML from editor
       },
       session.refreshToken
@@ -62,6 +62,8 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+
 
 
 
