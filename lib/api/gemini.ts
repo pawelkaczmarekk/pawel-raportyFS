@@ -128,17 +128,29 @@ Odpowiedź (tylko kod HTML, po polsku):`;
     const progres = celTygodniowy > 0 ? ((sprzedazTygodniowa / celTygodniowy) * 100).toFixed(1) : '0';
     const dynamika = sprzedazTygodniowa > celTygodniowy ? 'powyżej celu' : 'poniżej celu';
 
+    // Build data section only with available information
+    const dataLines = [
+      `- Partner: ${partner.nazwaKonta}`,
+      `- Sprzedaż: ${Math.round(sprzedazTygodniowa).toLocaleString('pl-PL')} PLN (${progres}% celu)`,
+      `- Dynamika M/M: ${partner.dynamikaMM}`,
+      `- Realizacja miesięczna: ${partner.realizacji}%`,
+    ];
+
+    if (userInput.historiaZmian) {
+      dataLines.push(`- Historia zmian: ${userInput.historiaZmian}`);
+    }
+    if (tasks.length > 0) {
+      dataLines.push(`- Zadania ClickUp: ${tasksSummary}`);
+    }
+    if (userInput.wykonaneDzialania) {
+      dataLines.push(`- Działania opiekuna: ${userInput.wykonaneDzialania}`);
+    }
+
     const prompt = `
 Stwórz ZWIĘZŁY raport tygodniowy w HTML. Maksymalnie 100 słów.
 
 DANE:
-- Partner: ${partner.nazwaKonta}
-- Sprzedaż: ${Math.round(sprzedazTygodniowa).toLocaleString('pl-PL')} PLN (${progres}% celu)
-- Dynamika M/M: ${partner.dynamikaMM}
-- Realizacja miesięczna: ${partner.realizacji}%
-- Historia zmian: ${userInput.historiaZmian || 'brak'}
-- Zadania ClickUp: ${tasksSummary}
-- Działania opiekuna: ${userInput.wykonaneDzialania || 'brak'}
+${dataLines.join('\n')}
 
 FORMAT (tylko HTML, bez markdown):
 <h2>Wyniki</h2>
@@ -156,6 +168,7 @@ ZASADY:
 - Bez wstępów i ozdobników
 - Krótkie zdania
 - Język polski
+- NIE pisz o brakujących danych - jeśli czegoś nie ma, po prostu pomiń
 
 HTML:`;
 

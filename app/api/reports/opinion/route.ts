@@ -43,8 +43,13 @@ export async function POST(request: NextRequest) {
       session.user.email
     );
 
-    // Get base URL
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    // Get base URL - supports Vercel deployment automatically
+    const getBaseUrl = () => {
+      if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL;
+      if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+      return 'http://localhost:3000';
+    };
+    const baseUrl = getBaseUrl();
 
     // Generate email HTML with token
     const emailHtml = generateOpinionRequestEmail(

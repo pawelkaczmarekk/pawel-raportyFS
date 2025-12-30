@@ -37,11 +37,13 @@ export async function POST(request: NextRequest) {
       session.user.email
     );
 
-    // Get base URL - IMPORTANT: Set NEXTAUTH_URL in production environment!
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    if (baseUrl.includes('localhost') && process.env.NODE_ENV === 'production') {
-      console.warn('[WARN] NEXTAUTH_URL contains localhost in production! Rating links will not work.');
-    }
+    // Get base URL - supports Vercel deployment automatically
+    const getBaseUrl = () => {
+      if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL;
+      if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+      return 'http://localhost:3000';
+    };
+    const baseUrl = getBaseUrl();
 
     // Read banner image and convert to base64 for email embedding
     let bannerBase64: string | undefined;
