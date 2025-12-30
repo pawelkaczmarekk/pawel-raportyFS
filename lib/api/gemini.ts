@@ -25,81 +25,62 @@ export class GeminiService {
   ): Promise<string> {
     const tasksSummary = this.formatTasksForAI(tasks);
 
+    // Build data sections only with available information
+    const dataSections: string[] = [];
+
+    // Always include basic partner data
+    dataSections.push(`WYNIKI:
+- Sprzedaż: ${partner.suma?.toLocaleString('pl-PL')} PLN
+- Dynamika R/R: ${partner.dynamikaRR}, M/M: ${partner.dynamikaMM}
+- Realizacja celu: ${partner.realizacji}%
+- ROAS: ${partner.zwrotZAds}x`);
+
+    // Add optional sections only if data exists
+    if (tasks.length > 0) {
+      dataSections.push(`ZADANIA CLICKUP:\n${tasksSummary}`);
+    }
+    if (userInput.historiaDzialan) {
+      dataSections.push(`HISTORIA ZMIAN:\n${userInput.historiaDzialan}`);
+    }
+    if (userInput.osiagniecia) {
+      dataSections.push(`OSIĄGNIĘCIA: ${userInput.osiagniecia}`);
+    }
+    if (userInput.wyzwania) {
+      dataSections.push(`WYZWANIA: ${userInput.wyzwania}`);
+    }
+    if (userInput.plany) {
+      dataSections.push(`PLANY: ${userInput.plany}`);
+    }
+
     const prompt = `
-Jesteś ekspertem ds. marketingu tworzącym DYNAMICZNY miesięczny raport dla partnera agencji Allegro Ads.
+Stwórz ZWIĘZŁY raport miesięczny w HTML. Max 150 słów.
 
-═══════════════════════════════════════════════════════════════
-DANE PARTNERA
-═══════════════════════════════════════════════════════════════
 PARTNER: ${partner.nazwaKonta}
-PAKIET: ${partner.pakiet}
-OPIEKUN: ${partner.opiekun}
 
-═══════════════════════════════════════════════════════════════
-WYNIKI SPRZEDAŻOWE
-═══════════════════════════════════════════════════════════════
-• Sprzedaż łączna: ${partner.suma?.toLocaleString('pl-PL')} PLN
-• Allegro.pl: ${partner.allegroPl?.toLocaleString('pl-PL')} PLN
-• Dynamika R/R: ${partner.dynamikaRR}
-• Dynamika M/M: ${partner.dynamikaMM}
-• Realizacja celu: ${partner.realizacji}%
+${dataSections.join('\n\n')}
 
-═══════════════════════════════════════════════════════════════
-METRYKI ADS
-═══════════════════════════════════════════════════════════════
-• Koszt ADS: ${partner.kosztAds?.toLocaleString('pl-PL')} PLN
-• Przychód ADS: ${partner.przychodAds?.toLocaleString('pl-PL')} PLN
-• Zwrot z ADS: ${partner.zwrotZAds}x
+FORMAT HTML (WAŻNE - użyj dokładnie tych tagów):
+<h2>Podsumowanie wyników</h2>
+<p>1-2 zdania z liczbami</p>
 
-═══════════════════════════════════════════════════════════════
-WYKONANE ZADANIA (ClickUp)
-═══════════════════════════════════════════════════════════════
-${tasksSummary}
+<h2>Wykonane działania</h2>
+<ul>
+<li>działanie 1</li>
+<li>działanie 2</li>
+</ul>
 
-═══════════════════════════════════════════════════════════════
-HISTORIA DZIAŁAŃ NA KONCIE (z systemu)
-═══════════════════════════════════════════════════════════════
-${userInput.historiaDzialan || 'Brak zarejestrowanych działań w systemie.'}
-
-═══════════════════════════════════════════════════════════════
-INFORMACJE OD OPIEKUNA
-═══════════════════════════════════════════════════════════════
-🏆 Osiągnięcia: ${userInput.osiagniecia}
-⚡ Wyzwania: ${userInput.wyzwania}
-🎯 Plany: ${userInput.plany}
-
-═══════════════════════════════════════════════════════════════
-
-ZADANIE: Napisz profesjonalny opis współpracy w formacie HTML.
-
-WYMAGANY FORMAT HTML:
-- Używaj <h2> dla nagłówków sekcji
-- Używaj <p> dla akapitów
-- Używaj <strong> dla wyróżnienia ważnych liczb i pojęć
-- Możesz użyć <ul><li> dla krótkich list (max 3-4 punkty)
-
-STRUKTURA RAPORTU:
-<h2>📊 Podsumowanie wyników</h2>
-<p>2-3 zdania z kluczowymi liczbami (sprzedaż, ROAS, dynamika)</p>
-
-<h2>🎯 Kluczowe osiągnięcia</h2>
-<p>lub krótka lista <ul><li> z 2-3 najważniejszymi osiągnięciami</p>
-
-<h2>✅ Wykonane działania</h2>
-<p>Podsumuj najważniejsze działania z historii systemu i ClickUp (edycje ofert, optymalizacje, zmiany)</p>
-
-<h2>🚀 Rekomendacje na przyszłość</h2>
-<p>1-2 zdania z konkretnymi rekomendacjami</p>
+<h2>Rekomendacje</h2>
+<p>1 zdanie</p>
 
 ZASADY:
-1. MAX 200 słów łącznie
-2. Używaj LICZB z danych (sprzedaż, ROAS, dynamika)
-3. NIE pisz wstępów typu "Z przyjemnością informujemy..."
-4. AKTYWNY głos: "Zrealizowaliśmy", "Osiągnęliśmy"
-5. Wyróżniaj kluczowe liczby za pomocą <strong>
-6. W sekcji "Wykonane działania" podsumuj typy działań z historii (edycje tytułów, optymalizacje opisów, itp.)
+- Tylko fakty i liczby
+- Krótkie zdania, aktywny głos
+- <strong> dla kluczowych liczb
+- NIE pisz o brakujących danych
+- NIE używaj emoji
+- Język polski
 
-Odpowiedź (tylko kod HTML, po polsku):`;
+HTML:`;
 
     try {
       const result = await this.model.generateContent(prompt);
