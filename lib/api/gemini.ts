@@ -73,6 +73,7 @@ FORMAT HTML (WAŻNE - użyj dokładnie tych tagów):
 <p>1 zdanie</p>
 
 ZASADY:
+- Pisz z perspektywy "MY" (opiekuna konta): "wprowadziliśmy", "zoptymalizowaliśmy", "osiągnęliśmy"
 - Tylko fakty i liczby
 - Krótkie zdania, aktywny głos
 - <strong> dla kluczowych liczb
@@ -145,11 +146,12 @@ FORMAT (tylko HTML, bez markdown):
 <p>1 zdanie - co dalej</p>
 
 ZASADY:
+- Pisz z perspektywy "MY" (opiekuna konta): "wprowadziliśmy", "zoptymalizowaliśmy", "osiągnęliśmy"
 - Tylko fakty i liczby
 - Bez wstępów i ozdobników
 - Krótkie zdania
 - Język polski
-- NIE pisz o brakujących danych - jeśli czegoś nie ma, po prostu pomiń
+- NIE pisz o brakujących danych
 
 HTML:`;
 
