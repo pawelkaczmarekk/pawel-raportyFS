@@ -68,6 +68,7 @@ export default function WeeklyReportTab({ partners }: WeeklyReportTabProps) {
           partnerName: selectedPartner,
           aiContent: editedContent, // Send edited content from modal
           reportData: reportData,
+          userInput: { wykonaneDzialania }, // Include user input for PDF actions section
         }),
       });
 

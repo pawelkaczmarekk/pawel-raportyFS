@@ -43,7 +43,7 @@ export function renderActionsSection(
 
   // Section header
   y = generator.drawSectionHeader(page, '1. Podsumowanie wykonanych działań', x, y);
-  y -= 10;
+  y -= LAYOUT.spacing.paragraph;
 
   if (data.actions.length === 0) {
     generator.drawText(page, 'Brak zarejestrowanych działań w tym okresie.', x, y, {

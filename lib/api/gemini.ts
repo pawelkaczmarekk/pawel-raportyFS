@@ -129,81 +129,35 @@ Odpowiedź (tylko kod HTML, po polsku):`;
     const dynamika = sprzedazTygodniowa > celTygodniowy ? 'powyżej celu' : 'poniżej celu';
 
     const prompt = `
-Jesteś asystentem tworzącym profesjonalny tygodniowy raport dla partnera agencji marketingowej.
+Stwórz ZWIĘZŁY raport tygodniowy w HTML. Maksymalnie 100 słów.
 
-═══════════════════════════════════════════════════════════════
-INFORMACJE O PARTNERZE
-═══════════════════════════════════════════════════════════════
-PARTNER: ${partner.nazwaKonta}
-PAKIET: ${partner.pakiet}
-OKRES: Ostatnie 7 dni
+DANE:
+- Partner: ${partner.nazwaKonta}
+- Sprzedaż: ${Math.round(sprzedazTygodniowa).toLocaleString('pl-PL')} PLN (${progres}% celu)
+- Dynamika M/M: ${partner.dynamikaMM}
+- Realizacja miesięczna: ${partner.realizacji}%
+- Historia zmian: ${userInput.historiaZmian || 'brak'}
+- Zadania ClickUp: ${tasksSummary}
+- Działania opiekuna: ${userInput.wykonaneDzialania || 'brak'}
 
-═══════════════════════════════════════════════════════════════
-WYNIKI SPRZEDAŻOWE
-═══════════════════════════════════════════════════════════════
-• Cel tygodniowy: ${celTygodniowy.toLocaleString('pl-PL')} PLN
-• Zrealizowano: ${Math.round(sprzedazTygodniowa).toLocaleString('pl-PL')} PLN
-• Progres: ${progres}% (${dynamika})
-• Dynamika miesiąc do miesiąca: ${partner.dynamikaMM}
-• Realizacja celu miesięcznego: ${partner.realizacji}%
+FORMAT (tylko HTML, bez markdown):
+<h2>Wyniki</h2>
+<p>1 zdanie z kluczowymi liczbami</p>
 
-═══════════════════════════════════════════════════════════════
-HISTORIA DZIAŁAŃ NA KONCIE (z systemu)
-═══════════════════════════════════════════════════════════════
-${userInput.historiaZmian || 'Brak zarejestrowanych działań w systemie w tym okresie.'}
+<h2>Wykonano</h2>
+<ul><li>punkt 1</li><li>punkt 2</li></ul>
+(3-5 punktów - same fakty, bez opisów)
 
-═══════════════════════════════════════════════════════════════
-WYKONANE ZADANIA W CLICKUP
-═══════════════════════════════════════════════════════════════
-${tasksSummary}
-
-═══════════════════════════════════════════════════════════════
-DODATKOWE INFORMACJE OD OPIEKUNA
-═══════════════════════════════════════════════════════════════
-${userInput.wykonaneDzialania}
-
-═══════════════════════════════════════════════════════════════
-
-ZADANIE: Stwórz kompleksowy raport tygodniowy w formacie HTML.
-
-WYMAGANY FORMAT HTML:
-- Używaj <h1> dla głównego tytułu sekcji
-- Używaj <h2> dla podsekcji
-- Używaj <p> dla akapitów
-- Używaj <ul><li> dla list punktowanych
-- Używaj <strong> dla wyróżnienia ważnych liczb i pojęć
-- Używaj emoji w nagłówkach dla lepszej wizualizacji
-
-STRUKTURA RAPORTU:
-
-<h1>📊 Podsumowanie tygodnia</h1>
-<p>1-2 zdania podsumowujące wyniki sprzedażowe w kontekście celu tygodniowego. Użyj <strong> dla kluczowych liczb.</p>
-
-<h1>⭐ Najważniejsze wydarzenia</h1>
-<ul>
-<li><strong>[Wydarzenie]</strong> - znaczenie/wpływ dla partnera</li>
-</ul>
-(TOP 3-5 najważniejszych zmian z danych)
-
-<h1>✅ Wykonane działania</h1>
-<ul>
-<li><strong>[Działanie]</strong> - rezultat/cel działania</li>
-</ul>
-(3-7 punktów łączących zadania ClickUp, informacje od opiekuna, zmiany w systemie)
-
-<h1>🚀 Rekomendacje na przyszły tydzień</h1>
-<p>1-2 zdania z konkretnymi rekomendacjami opartymi na danych z raportu.</p>
+<h2>Plan</h2>
+<p>1 zdanie - co dalej</p>
 
 ZASADY:
-1. Pisz w języku polskim
-2. Bądź konkretny - używaj liczb, dat, nazw produktów z danych
-3. Zachowaj profesjonalny ale ciepły ton
-4. Podkreślaj pozytywne aspekty, ale bądź szczery o wyzwaniach
-5. Jeśli brakuje danych w jakiejś sekcji, pomiń ją lub napisz krótko
-6. Wyróżniaj kluczowe informacje za pomocą <strong>
-7. NIE używaj markdown (**, ##) - tylko czyste tagi HTML
+- Tylko fakty i liczby
+- Bez wstępów i ozdobników
+- Krótkie zdania
+- Język polski
 
-Odpowiedź (tylko kod HTML, po polsku):`;
+HTML:`;
 
     try {
       const result = await this.model.generateContent(prompt);
