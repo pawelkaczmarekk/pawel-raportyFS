@@ -212,6 +212,202 @@ export class PDFGenerator {
     return y;
   }
 
+  // Parse text into segments with bold markers
+  private parseTextSegments(text: string): Array<{ text: string; bold: boolean }> {
+    const segments: Array<{ text: string; bold: boolean }> = [];
+    const regex = /\*\*([^*]+)\*\*/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+      // Add text before the match (regular)
+      if (match.index > lastIndex) {
+        const regularText = text.slice(lastIndex, match.index);
+        if (regularText) {
+          segments.push({ text: regularText, bold: false });
+        }
+      }
+      // Add the matched text (bold)
+      segments.push({ text: match[1], bold: true });
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text after last match
+    if (lastIndex < text.length) {
+      segments.push({ text: text.slice(lastIndex), bold: false });
+    }
+
+    return segments;
+  }
+
+  // Wrap text with bold markers preserved
+  private wrapTextWithBold(
+    text: string,
+    regularFont: PDFFont,
+    boldFont: PDFFont,
+    fontSize: number,
+    maxWidth: number
+  ): Array<Array<{ text: string; bold: boolean }>> {
+    const segments = this.parseTextSegments(text);
+    const lines: Array<Array<{ text: string; bold: boolean }>> = [];
+    let currentLine: Array<{ text: string; bold: boolean }> = [];
+    let currentLineWidth = 0;
+    const spaceWidth = regularFont.widthOfTextAtSize(' ', fontSize);
+
+    for (const segment of segments) {
+      const font = segment.bold ? boldFont : regularFont;
+      const words = segment.text.split(' ');
+
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+        if (!word) continue;
+
+        const wordWidth = font.widthOfTextAtSize(word, fontSize);
+        const needsSpace = currentLine.length > 0 || (currentLine.length === 1 && currentLine[0].text.endsWith(' '));
+        const totalWidth = currentLineWidth + (needsSpace ? spaceWidth : 0) + wordWidth;
+
+        if (totalWidth <= maxWidth || currentLine.length === 0) {
+          // Add word to current line
+          if (needsSpace && currentLine.length > 0) {
+            // Add space to previous segment or create new one
+            const lastSeg = currentLine[currentLine.length - 1];
+            if (lastSeg.bold === segment.bold) {
+              lastSeg.text += ' ' + word;
+            } else {
+              currentLine.push({ text: ' ' + word, bold: segment.bold });
+            }
+            currentLineWidth += spaceWidth + wordWidth;
+          } else {
+            if (currentLine.length > 0 && currentLine[currentLine.length - 1].bold === segment.bold) {
+              currentLine[currentLine.length - 1].text += word;
+            } else {
+              currentLine.push({ text: word, bold: segment.bold });
+            }
+            currentLineWidth += wordWidth;
+          }
+        } else {
+          // Start new line
+          if (currentLine.length > 0) {
+            lines.push(currentLine);
+          }
+          currentLine = [{ text: word, bold: segment.bold }];
+          currentLineWidth = wordWidth;
+        }
+      }
+    }
+
+    // Push last line
+    if (currentLine.length > 0) {
+      lines.push(currentLine);
+    }
+
+    return lines;
+  }
+
+  // Draw multiline text with inline bold support
+  drawMultilineTextWithBold(
+    page: PDFPage,
+    text: string,
+    x: number,
+    startY: number,
+    options: TextOptions = {}
+  ): number {
+    const {
+      size = LAYOUT.fonts.body,
+      color = COLORS.text.body,
+      maxWidth = LAYOUT.content.width,
+      lineHeight = LAYOUT.lineHeight.normal,
+      justify = false,
+    } = options;
+
+    // If no bold markers, use regular method
+    if (!text.includes('**')) {
+      return this.drawMultilineText(page, text, x, startY, options);
+    }
+
+    const regularFont = this.font!;
+    const boldFont = this.boldFont!;
+    const lines = this.wrapTextWithBold(text, regularFont, boldFont, size, maxWidth);
+    let y = startY;
+    const lineSpacing = size * lineHeight;
+    const rgbColor = rgb(color.r, color.g, color.b);
+
+    for (let i = 0; i < lines.length; i++) {
+      const lineSegments = lines[i];
+      const isLastLine = i === lines.length - 1;
+
+      // Calculate total line width for justification
+      let lineWidth = 0;
+      for (const seg of lineSegments) {
+        const font = seg.bold ? boldFont : regularFont;
+        lineWidth += font.widthOfTextAtSize(seg.text, size);
+      }
+
+      // Draw segments
+      let currentX = x;
+
+      if (justify && !isLastLine && lineWidth < maxWidth * 0.9) {
+        // For justified text, calculate extra space to distribute
+        const lineText = lineSegments.map(s => s.text).join('');
+        const words = lineText.split(' ').filter(w => w.length > 0);
+        if (words.length > 1) {
+          const extraSpace = (maxWidth - lineWidth) / (words.length - 1);
+
+          for (const seg of lineSegments) {
+            const font = seg.bold ? boldFont : regularFont;
+            const segWords = seg.text.split(' ');
+
+            for (let j = 0; j < segWords.length; j++) {
+              const word = segWords[j];
+              if (!word) {
+                currentX += extraSpace;
+                continue;
+              }
+
+              page.drawText(word, {
+                x: currentX,
+                y,
+                size,
+                font,
+                color: rgbColor,
+              });
+              currentX += font.widthOfTextAtSize(word, size);
+
+              // Add justified space after word (except for last word in line)
+              if (j < segWords.length - 1 || lineSegments.indexOf(seg) < lineSegments.length - 1) {
+                currentX += extraSpace;
+              }
+            }
+          }
+        } else {
+          // Single word - just draw normally
+          for (const seg of lineSegments) {
+            const font = seg.bold ? boldFont : regularFont;
+            page.drawText(seg.text, { x: currentX, y, size, font, color: rgbColor });
+            currentX += font.widthOfTextAtSize(seg.text, size);
+          }
+        }
+      } else {
+        // Normal rendering
+        for (const seg of lineSegments) {
+          const font = seg.bold ? boldFont : regularFont;
+          page.drawText(seg.text, {
+            x: currentX,
+            y,
+            size,
+            font,
+            color: rgbColor,
+          });
+          currentX += font.widthOfTextAtSize(seg.text, size);
+        }
+      }
+
+      y -= lineSpacing;
+    }
+
+    return y;
+  }
+
   // Draw a single justified line (spreads words to fill maxWidth)
   private drawJustifiedLine(
     page: PDFPage,
@@ -293,16 +489,16 @@ export class PDFGenerator {
       size = LAYOUT.fonts.body,
       color = COLORS.text.body,
       font = this.font!,
-      maxWidth = LAYOUT.content.width - 20,
+      maxWidth = LAYOUT.content.width - 8,
       lineHeight = LAYOUT.lineHeight.normal,
     } = options;
 
     let y = startY;
-    const bulletIndent = 15;
+    const bulletIndent = 8; // Single space after dash
     const lineSpacing = size * lineHeight;
 
     for (const item of items) {
-      // Draw bullet
+      // Draw dash
       page.drawText('-', {
         x,
         y,
@@ -491,7 +687,7 @@ export class PDFGenerator {
   estimateBulletListHeight(items: string[], fontSize: number, maxWidth: number, lineHeight: number = 1.5): number {
     if (!items || items.length === 0 || !this.font) return 0;
     let totalHeight = 0;
-    const bulletIndent = 15;
+    const bulletIndent = 8; // Single space after dash
 
     for (const item of items) {
       const lines = this.wrapText(item, this.font, fontSize, maxWidth - bulletIndent);

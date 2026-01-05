@@ -70,7 +70,7 @@ export async function generateWeeklyPDF(data: WeeklyPDFData): Promise<Buffer> {
   const driveActions = driveActionsSummary || [];
 
   const combinedActions = [...userActions, ...clickupActions, ...driveActions];
-  const actionsToRender = combinedActions.length > 0 ? combinedActions : ['Brak zarejestrowanych działań w tym okresie'];
+  const actionsToRender = combinedActions;
 
   // Estimate total page 1 content height for dynamic background
   const headerHeight = LAYOUT.fonts.title * 1.5 + LAYOUT.fonts.subheading * 3 + LAYOUT.spacing.section * 2;

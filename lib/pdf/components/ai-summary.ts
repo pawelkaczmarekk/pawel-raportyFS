@@ -226,43 +226,61 @@ function renderBlock(
 
   // Handle list items with bullet
   if (block.type === 'list-item') {
-    // Draw bullet
-    generator.drawText(page, '•', x, y, {
+    // Draw bullet with single space indent
+    generator.drawText(page, '-', x, y, {
       size: style.fontSize,
       color: style.color,
     });
 
-    // Draw text with indent
-    const bulletIndent = 15;
-    const text = block.text.replace(/\*\*/g, ''); // Remove bold markers for now
-    const font = getFontForStyle(generator, style.fontType);
-    y = generator.drawMultilineText(page, text, x + bulletIndent, y, {
+    // Draw text with indent (single space after dash)
+    const bulletIndent = 8;
+    // Keep bold markers for proper rendering
+    y = generator.drawMultilineTextWithBold(page, block.text, x + bulletIndent, y, {
       size: style.fontSize,
       color: style.color,
       maxWidth: LAYOUT.content.width - bulletIndent,
       lineHeight: LAYOUT.lineHeight.normal,
-      font,
     });
   } else {
     // For headers and paragraphs
-    let text = block.text.replace(/\*\*/g, ''); // Remove bold markers for now
-    // Apply uppercase for h1/h2 per brand guidelines
+    let text = block.text;
+    // Apply uppercase for h1/h2 per brand guidelines (but preserve bold markers)
     if (style.uppercase) {
-      text = text.toUpperCase();
+      // Uppercase text but preserve **markers**
+      text = text.replace(/\*\*([^*]+)\*\*/g, (_, content) => `**${content.toUpperCase()}**`);
+      text = text.replace(/(?<!\*)([^*]+)(?!\*)/g, (match) => {
+        // Only uppercase text outside of ** markers
+        if (!match.includes('**')) return match.toUpperCase();
+        return match;
+      });
+      // Simple approach: remove markers, uppercase, no bold in headers
+      text = block.text.replace(/\*\*/g, '').toUpperCase();
     }
+
     const font = getFontForStyle(generator, style.fontType);
 
     // Use justification for paragraphs (not headers)
     const shouldJustify = block.type === 'paragraph';
 
-    y = generator.drawMultilineText(page, text, x, y, {
-      size: style.fontSize,
-      color: style.color,
-      maxWidth: LAYOUT.content.width,
-      lineHeight: block.type === 'h1' || block.type === 'h2' ? 1.3 : LAYOUT.lineHeight.normal,
-      font,
-      justify: shouldJustify,
-    });
+    if (block.type === 'paragraph') {
+      // Paragraphs can have inline bold
+      y = generator.drawMultilineTextWithBold(page, text, x, y, {
+        size: style.fontSize,
+        color: style.color,
+        maxWidth: LAYOUT.content.width,
+        lineHeight: LAYOUT.lineHeight.normal,
+        justify: shouldJustify,
+      });
+    } else {
+      // Headers use heading font, no inline bold needed
+      y = generator.drawMultilineText(page, text, x, y, {
+        size: style.fontSize,
+        color: style.color,
+        maxWidth: LAYOUT.content.width,
+        lineHeight: 1.3,
+        font,
+      });
+    }
   }
 
   // Add bottom margin
@@ -281,7 +299,7 @@ function estimateBlockHeight(
 
   let width = LAYOUT.content.width;
   if (block.type === 'list-item') {
-    width -= 15; // bullet indent
+    width -= 8; // bullet indent (single space after dash)
   }
 
   const textHeight = generator.estimateTextHeight(

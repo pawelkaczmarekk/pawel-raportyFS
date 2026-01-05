@@ -41,24 +41,20 @@ export function renderActionsSection(
   const x = LAYOUT.margin.left;
   let y = startY;
 
+  // Skip entire section if no actions
+  if (data.actions.length === 0) {
+    return y;
+  }
+
   // Section header
   y = generator.drawSectionHeader(page, '1. Podsumowanie wykonanych działań', x, y);
   y -= LAYOUT.spacing.paragraph;
-
-  if (data.actions.length === 0) {
-    generator.drawText(page, 'Brak zarejestrowanych działań w tym okresie.', x, y, {
-      size: LAYOUT.fonts.body,
-      color: COLORS.text.muted,
-    });
-    y -= LAYOUT.fonts.body + LAYOUT.spacing.section;
-    return y;
-  }
 
   // Draw bullet list of actions
   y = generator.drawBulletList(page, data.actions, x, y, {
     size: LAYOUT.fonts.body,
     color: COLORS.text.body,
-    maxWidth: LAYOUT.content.width - 20,
+    maxWidth: LAYOUT.content.width - 8,
   });
 
   y -= LAYOUT.spacing.section;

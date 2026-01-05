@@ -71,7 +71,7 @@ export async function generateMonthlyPDF(data: MonthlyPDFData): Promise<Buffer> 
   const driveActions = driveActionsSummary || [];
 
   const combinedActions = [...allActions, ...clickupActions, ...driveActions];
-  const actionsToRender = combinedActions.length > 0 ? combinedActions : ['Brak zarejestrowanych działań w tym okresie'];
+  const actionsToRender = combinedActions;
 
   // Estimate page 1 content height for background
   const headerHeight = LAYOUT.fonts.title * 1.5 + LAYOUT.fonts.subheading * 3 + LAYOUT.spacing.section * 2;
