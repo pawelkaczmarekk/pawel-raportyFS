@@ -6,8 +6,9 @@ import { useRouter } from 'next/navigation';
 import MonthlyReportTab from '@/components/MonthlyReportTab';
 import WeeklyReportTab from '@/components/WeeklyReportTab';
 import OpinionRequestTab from '@/components/OpinionRequestTab';
+import CaregiverActionsTab from '@/components/CaregiverActionsTab';
 
-type Tab = 'monthly' | 'weekly' | 'opinion';
+type Tab = 'monthly' | 'weekly' | 'opinion' | 'caregiver';
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -113,6 +114,16 @@ export default function Home() {
               >
                 💬 Prośba o Opinię
               </button>
+              <button
+                onClick={() => setActiveTab('caregiver')}
+                className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
+                  activeTab === 'caregiver'
+                    ? 'border-b-2 border-emerald-600 text-emerald-600'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                📋 Opiekun
+              </button>
             </nav>
           </div>
 
@@ -132,6 +143,9 @@ export default function Home() {
                 )}
                 {activeTab === 'opinion' && (
                   <OpinionRequestTab partners={partners} />
+                )}
+                {activeTab === 'caregiver' && (
+                  <CaregiverActionsTab partners={partners} />
                 )}
               </>
             )}

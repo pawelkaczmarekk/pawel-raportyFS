@@ -1,10 +1,16 @@
-import { PDFPage } from 'pdf-lib';
+import { PDFPage, rgb } from 'pdf-lib';
 import { PDFGenerator } from '../pdf-generator';
 import { LAYOUT } from '../utils/layout';
 import { COLORS } from '../utils/colors';
 
 export interface ActionsData {
   actions: string[];
+}
+
+export interface NarrativeActionsData {
+  osiagniecia: string;
+  wyzwania: string;
+  plany: string;
 }
 
 // Parse action text into list items
@@ -58,6 +64,94 @@ export function renderActionsSection(
   });
 
   y -= LAYOUT.spacing.section;
+
+  return y;
+}
+
+// Draw a subsection label (e.g., "OSIĄGNIĘCIA") using condensed font
+function drawSubsectionLabel(
+  generator: PDFGenerator,
+  page: PDFPage,
+  label: string,
+  x: number,
+  y: number
+): number {
+  const font = generator.getCondensedFont();
+  const size = LAYOUT.fonts.body;
+
+  page.drawText(label.toUpperCase(), {
+    x,
+    y,
+    size,
+    font,
+    color: rgb(COLORS.primary.r, COLORS.primary.g, COLORS.primary.b),
+  });
+
+  return y - size - LAYOUT.spacing.line;
+}
+
+// Render narrative (descriptive) actions section for monthly reports
+// Instead of bullet points, renders continuous paragraphs for each category
+export function renderNarrativeActionsSection(
+  generator: PDFGenerator,
+  page: PDFPage,
+  data: NarrativeActionsData,
+  startY: number
+): number {
+  const x = LAYOUT.margin.left;
+  let y = startY;
+
+  // Skip entire section if all fields are empty
+  const hasContent =
+    (data.osiagniecia && data.osiagniecia.trim()) ||
+    (data.wyzwania && data.wyzwania.trim()) ||
+    (data.plany && data.plany.trim());
+
+  if (!hasContent) {
+    return y;
+  }
+
+  // Section header
+  y = generator.drawSectionHeader(page, '1. Podsumowanie wykonanych działań', x, y);
+  y -= LAYOUT.spacing.paragraph;
+
+  // Osiągnięcia subsection
+  if (data.osiagniecia && data.osiagniecia.trim()) {
+    y = drawSubsectionLabel(generator, page, 'Osiągnięcia', x, y);
+    y = generator.drawMultilineText(page, data.osiagniecia.trim(), x, y, {
+      size: LAYOUT.fonts.body,
+      color: COLORS.text.body,
+      maxWidth: LAYOUT.content.width,
+      lineHeight: LAYOUT.lineHeight.normal,
+    });
+    y -= LAYOUT.spacing.paragraph;
+  }
+
+  // Wyzwania subsection
+  if (data.wyzwania && data.wyzwania.trim()) {
+    y = drawSubsectionLabel(generator, page, 'Wyzwania', x, y);
+    y = generator.drawMultilineText(page, data.wyzwania.trim(), x, y, {
+      size: LAYOUT.fonts.body,
+      color: COLORS.text.body,
+      maxWidth: LAYOUT.content.width,
+      lineHeight: LAYOUT.lineHeight.normal,
+    });
+    y -= LAYOUT.spacing.paragraph;
+  }
+
+  // Plany na przyszłość subsection
+  if (data.plany && data.plany.trim()) {
+    y = drawSubsectionLabel(generator, page, 'Plany na przyszłość', x, y);
+    y = generator.drawMultilineText(page, data.plany.trim(), x, y, {
+      size: LAYOUT.fonts.body,
+      color: COLORS.text.body,
+      maxWidth: LAYOUT.content.width,
+      lineHeight: LAYOUT.lineHeight.normal,
+    });
+    y -= LAYOUT.spacing.paragraph;
+  }
+
+  y -= LAYOUT.spacing.section - LAYOUT.spacing.paragraph;
 
   return y;
 }

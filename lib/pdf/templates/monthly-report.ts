@@ -4,14 +4,13 @@ import { LAYOUT, fromTop } from '../utils/layout';
 import { PDFPage } from 'pdf-lib';
 import {
   renderHeader,
-  renderActionsSection,
+  renderNarrativeActionsSection,
   renderAISummary,
   renderAISummaryOverflow,
   renderSalesSection,
   renderAdsMetrics,
   renderDynamicsSection,
   renderChartSection,
-  parseActions,
 } from '../components';
 import { sheetsService } from '@/lib/api/sheets';
 
@@ -56,28 +55,17 @@ export async function generateMonthlyPDF(data: MonthlyPDFData): Promise<Buffer> 
   const startY = fromTop(topOffset);
   let y = startY;
 
-  // Prepare actions
-  const allActions = [
-    ...parseActions(userInput.osiagniecia),
-    ...parseActions(userInput.wyzwania),
-    ...parseActions(userInput.plany),
-  ];
-
-  const clickupActions = tasks
-    .filter(t => t.status?.status?.toLowerCase().includes('complete') || t.status?.status?.toLowerCase().includes('closed'))
-    .map(t => t.name);
-
-  // Include Google Drive actions summary
-  const driveActions = driveActionsSummary || [];
-
-  const combinedActions = [...allActions, ...clickupActions, ...driveActions];
-  const actionsToRender = combinedActions;
-
   // Estimate page 1 content height for background
+  // Note: ClickUp tasks and Drive actions are omitted from the narrative section
+  // (they are included in the AI Summary instead)
   const headerHeight = LAYOUT.fonts.title * 1.5 + LAYOUT.fonts.subheading * 3 + LAYOUT.spacing.section * 2;
-  const actionsHeight = LAYOUT.fonts.heading * 1.5 + generator.estimateBulletListHeight(actionsToRender, LAYOUT.fonts.body, LAYOUT.content.width - 20) + LAYOUT.spacing.section;
+  const narrativeHeight = LAYOUT.fonts.heading * 1.5 +
+    generator.estimateTextHeight(userInput.osiagniecia, LAYOUT.fonts.body, LAYOUT.content.width) +
+    generator.estimateTextHeight(userInput.wyzwania, LAYOUT.fonts.body, LAYOUT.content.width) +
+    generator.estimateTextHeight(userInput.plany, LAYOUT.fonts.body, LAYOUT.content.width) +
+    LAYOUT.spacing.section * 2;
   const aiSummaryHeight = LAYOUT.fonts.heading * 1.5 + generator.estimateTextHeight(aiContent, LAYOUT.fonts.body, LAYOUT.content.width) + LAYOUT.spacing.section * 2;
-  const totalPage1Height = headerHeight + actionsHeight + aiSummaryHeight + LAYOUT.spacing.paragraph * 4;
+  const totalPage1Height = headerHeight + narrativeHeight + aiSummaryHeight + LAYOUT.spacing.paragraph * 4;
 
   // 1. Header
   y = renderHeader(generator, currentPage, {
@@ -88,9 +76,11 @@ export async function generateMonthlyPDF(data: MonthlyPDFData): Promise<Buffer> 
     opiekun: partner.opiekun,
   }, y);
 
-  // 2. Actions section
-  y = renderActionsSection(generator, currentPage, {
-    actions: actionsToRender,
+  // 2. Actions section (narrative format for monthly reports)
+  y = renderNarrativeActionsSection(generator, currentPage, {
+    osiagniecia: userInput.osiagniecia,
+    wyzwania: userInput.wyzwania,
+    plany: userInput.plany,
   }, y);
 
   // 3. AI Summary with overflow handling

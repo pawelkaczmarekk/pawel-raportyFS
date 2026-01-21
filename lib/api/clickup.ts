@@ -215,8 +215,10 @@ export class ClickUpService {
     endDate: Date
   ): Promise<ClickUpTask[]> {
     try {
+      // Fetch all tasks including closed ones (don't filter by date_closed via API
+      // because many completed tasks don't have date_closed set)
       const response = await fetch(
-        `${this.baseUrl}/list/${listId}/task?archived=false&date_closed_gt=${startDate.getTime()}&date_closed_lt=${endDate.getTime()}`,
+        `${this.baseUrl}/list/${listId}/task?archived=false&include_closed=true`,
         {
           headers: {
             Authorization: this.apiKey,
@@ -231,12 +233,33 @@ export class ClickUpService {
       const data = await response.json();
       const tasks = data.tasks || [];
 
-      // Filter only closed tasks
-      return tasks.filter(
-        (task: any) =>
-          task.status?.status?.toLowerCase() === 'closed' ||
-          task.status?.status?.toLowerCase() === 'complete'
-      );
+      // Filter only closed/completed tasks (supports both English and Polish status names)
+      const completedStatuses = ['closed', 'complete', 'gotowe', 'zakończone', 'zakonczone'];
+
+      // Filter by status and by date range (using date_updated or date_closed if available)
+      const startTime = startDate.getTime();
+      const endTime = endDate.getTime();
+
+      return tasks.filter((task: any) => {
+        // Must have completed status
+        if (!completedStatuses.includes(task.status?.status?.toLowerCase())) {
+          return false;
+        }
+
+        // Check if task was updated/closed within date range
+        // Use date_closed if available, otherwise date_updated
+        const taskDate = task.date_closed
+          ? parseInt(task.date_closed)
+          : task.date_updated
+            ? parseInt(task.date_updated)
+            : null;
+
+        if (!taskDate) {
+          return false; // Skip tasks without any date
+        }
+
+        return taskDate >= startTime && taskDate <= endTime;
+      });
     } catch (error) {
       console.error('Error fetching ClickUp tasks:', error);
       return [];
