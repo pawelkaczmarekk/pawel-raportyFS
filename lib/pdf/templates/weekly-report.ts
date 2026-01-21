@@ -5,6 +5,7 @@ import {
   renderHeader,
   renderActionsSection,
   renderAISummary,
+  renderAISummaryOverflow,
   renderSalesSection,
   renderAdsMetrics,
   renderDynamicsSection,
@@ -92,13 +93,27 @@ export async function generateWeeklyPDF(data: WeeklyPDFData): Promise<Buffer> {
     actions: actionsToRender,
   }, y);
 
-  // 3. AI Summary (use result object but ignore overflow for weekly - simpler reports)
+  // 3. AI Summary
   const aiResult = renderAISummary(generator, page1, {
     content: aiContent,
   }, y);
   y = aiResult.y;
 
-  // === PAGE 2: Data tables (Sales, ADS, Dynamics) - NO CHART ===
+  // Handle overflow - render on new pages if content didn't fit
+  let aiOverflow = aiResult.overflow;
+  while (aiOverflow.length > 0) {
+    const overflowPage = await generator.addPage();
+    const overflowStartY = fromTop(LAYOUT.page.height * 0.20);
+    const overflowResult = renderAISummaryOverflow(
+      generator,
+      overflowPage,
+      aiOverflow,
+      overflowStartY
+    );
+    aiOverflow = overflowResult.overflow;
+  }
+
+  // === PAGE 2 (or later if overflow): Data tables (Sales, ADS, Dynamics) - NO CHART ===
 
   const page2 = await generator.addPage();
   const page2TopOffset = LAYOUT.page.height * 0.20;
