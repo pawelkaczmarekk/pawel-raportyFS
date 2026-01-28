@@ -64,10 +64,7 @@ FORMAT HTML (WAŻNE - użyj dokładnie tych tagów):
 <p>1-2 zdania z liczbami</p>
 
 <h2>Wykonane działania</h2>
-<ul>
-<li>działanie 1</li>
-<li>działanie 2</li>
-</ul>
+<p>Opis ogólny wykonanych działań w formie ciągłego tekstu, np. "Edytowaliśmy opisy ofert, dostosowaliśmy strategię promowania, zoptymalizowaliśmy kampanie reklamowe."</p>
 
 <h2>Rekomendacje</h2>
 <p>1 zdanie</p>
@@ -79,6 +76,7 @@ ZASADY:
 - <strong> dla kluczowych liczb
 - NIE pisz o brakujących danych
 - NIE używaj emoji
+- W sekcji Wykonane działania opisuj ogólnie kategorie działań (np. edycja opisów, zmiana promowań, optymalizacja kampanii) — NIE wymieniaj szczegółów jak ID ofert, liczba zmian itp. Pisz ciągłym tekstem, nie używaj list.
 - Język polski
 
 HTML:`;
