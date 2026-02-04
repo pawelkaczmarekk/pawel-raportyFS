@@ -353,14 +353,26 @@ export class SheetsService {
   }
 
   // Get partner's sales from a specific previous month (for comparison)
+  // Uses Statystyki tab data instead of fetching from individual month sheets
   async getPartnerSalesForMonth(
     partnerName: string,
     date: Date
   ): Promise<number | undefined> {
     try {
-      const sheetName = this.getSheetNameForDate(date);
-      const partner = await this.getPartnerByName(partnerName, sheetName);
-      return partner?.suma;
+      const month = `${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
+      console.log(`[SheetsService] Getting sales for ${partnerName} in month ${month} from Statystyki`);
+
+      // Fetch enough months to cover the requested date (24 months should be plenty)
+      const statystykiData = await this.getStatystykiData(partnerName, 24);
+      const monthData = statystykiData.find(d => d.month === month);
+
+      if (monthData) {
+        console.log(`[SheetsService] Found sales for ${month}: ${monthData.sales}`);
+      } else {
+        console.log(`[SheetsService] No data found for ${month} in Statystyki`);
+      }
+
+      return monthData?.sales;
     } catch (error) {
       console.error(`[SheetsService] Error fetching sales for ${partnerName} in ${date}:`, error);
       return undefined;
