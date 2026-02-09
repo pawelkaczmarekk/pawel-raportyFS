@@ -245,28 +245,60 @@ export class SheetsService {
       console.log(`[SheetsService] Statystyki headers count: ${headers.length}`);
 
       // Find column index matching partner name (case-insensitive, partial match)
+      // Priority: 1) exact match, 2) header contains partner name, 3) partner name contains header (with length restrictions)
       let partnerColumnIndex = -1;
       const normalizedPartnerName = partnerName.toLowerCase().replace(/[_-]/g, '');
 
+      // Log all headers for debugging (first 30)
+      console.log(`[SheetsService] All Statystyki headers (first 30):`, headers.slice(0, 30));
+      console.log(`[SheetsService] Searching for normalized name: "${normalizedPartnerName}"`);
+
+      // First pass: look for exact match only
       for (let i = 0; i < headers.length; i++) {
         const header = (headers[i] || '').toString().toLowerCase().replace(/[_-]/g, '');
-        if (header === normalizedPartnerName ||
-            header.includes(normalizedPartnerName) ||
-            normalizedPartnerName.includes(header)) {
+        if (header === normalizedPartnerName) {
           partnerColumnIndex = i;
-          console.log(`[SheetsService] Found partner column at index ${i}: ${headers[i]}`);
+          console.log(`[SheetsService] EXACT match found at index ${i}: "${headers[i]}"`);
           break;
         }
       }
 
+      // Second pass: header contains full partner name
       if (partnerColumnIndex === -1) {
-        console.warn(`[SheetsService] Partner "${partnerName}" not found in Statystyki headers`);
+        for (let i = 0; i < headers.length; i++) {
+          const header = (headers[i] || '').toString().toLowerCase().replace(/[_-]/g, '');
+          if (header.includes(normalizedPartnerName)) {
+            partnerColumnIndex = i;
+            console.log(`[SheetsService] CONTAINS match found at index ${i}: "${headers[i]}" contains "${normalizedPartnerName}"`);
+            break;
+          }
+        }
+      }
+
+      // Third pass: partner name contains header (with strict length restrictions to avoid false positives)
+      // Require: header length >= 4 chars AND header is at least 60% of partner name length
+      if (partnerColumnIndex === -1) {
+        for (let i = 0; i < headers.length; i++) {
+          const header = (headers[i] || '').toString().toLowerCase().replace(/[_-]/g, '');
+          if (header.length >= 4 &&
+              normalizedPartnerName.includes(header) &&
+              header.length >= normalizedPartnerName.length * 0.6) {
+            partnerColumnIndex = i;
+            console.log(`[SheetsService] REVERSE match found at index ${i}: "${normalizedPartnerName}" contains "${headers[i]}" (header length: ${header.length}, min required: ${Math.ceil(normalizedPartnerName.length * 0.6)})`);
+            break;
+          }
+        }
+      }
+
+      if (partnerColumnIndex === -1) {
+        console.warn(`[SheetsService] Partner "${partnerName}" (normalized: "${normalizedPartnerName}") NOT FOUND in Statystyki headers`);
+        console.warn(`[SheetsService] Available headers (first 50):`, headers.slice(0, 50).join(', '));
         return [];
       }
 
       // Get the column letter for the partner
       const partnerColumnLetter = this.indexToColumnLetter(partnerColumnIndex);
-      console.log(`[SheetsService] Partner column letter: ${partnerColumnLetter}`);
+      console.log(`[SheetsService] Final match: "${headers[partnerColumnIndex]}" at column ${partnerColumnLetter} (index ${partnerColumnIndex})`);
 
       // Fetch only column A (dates) and the specific partner column
       // Use two separate ranges to avoid fetching all columns in between

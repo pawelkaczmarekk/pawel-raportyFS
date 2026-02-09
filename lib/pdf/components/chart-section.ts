@@ -232,6 +232,13 @@ export async function renderChartSection(
     return y;
   }
 
+  // Warn if we have very few data points - might indicate wrong column matching
+  if (data.months.length < 3) {
+    console.warn(`[ChartSection] WARNING: Only ${data.months.length} data point(s) found - chart may be incomplete!`);
+    console.warn(`[ChartSection] This might indicate wrong column matching in Statystyki sheet.`);
+    console.warn(`[ChartSection] Data:`, data);
+  }
+
   console.log(`[ChartSection] Rendering chart with ${data.months.length} months:`, data.months);
 
   // Generate chart
