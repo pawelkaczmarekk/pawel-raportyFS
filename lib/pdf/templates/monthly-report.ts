@@ -25,6 +25,7 @@ export interface MonthlyPDFData {
   };
   dateRange: { start: Date; end: Date };
   celMiesieczny?: number;
+  obrot?: number;
   driveActionsSummary?: string[];
 }
 
@@ -39,7 +40,7 @@ function needsNewPage(currentY: number, requiredHeight: number): boolean {
 }
 
 export async function generateMonthlyPDF(data: MonthlyPDFData): Promise<Buffer> {
-  const { partner, tasks, aiContent, userInput, celMiesieczny, driveActionsSummary } = data;
+  const { partner, tasks, aiContent, userInput, celMiesieczny, obrot, driveActionsSummary } = data;
 
   const dateRange = {
     start: data.dateRange.start instanceof Date ? data.dateRange.start : new Date(data.dateRange.start),
@@ -139,6 +140,7 @@ export async function generateMonthlyPDF(data: MonthlyPDFData): Promise<Buffer> 
     allegreSk: partner.allegreSk,
     allegroHu: partner.allegroHu,
     suma: partner.suma,
+    obrot: obrot,
     previousMonth: previousMonthSales,
     previousYear: previousYearSales,
   }, y);

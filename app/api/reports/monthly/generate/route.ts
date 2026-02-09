@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { partnerName, celMiesieczny, osiagniecia, wyzwania, plany } = body;
+    const { partnerName, celMiesieczny, obrot, osiagniecia, wyzwania, plany } = body;
 
     // Get date range
     const dateRange = getPreviousMonthRange();
@@ -112,6 +112,7 @@ export async function POST(request: NextRequest) {
       partner,
       dateRange,
       celMiesieczny,
+      obrot,
       osiagniecia,
       wyzwania,
       plany,

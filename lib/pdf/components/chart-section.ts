@@ -219,7 +219,7 @@ export async function renderChartSection(
   let y = startY;
 
   // Section header - 12 months
-  y = generator.drawSectionHeader(page, '6. Historia sprzedaży (12 miesięcy)', x, y);
+  y = generator.drawSectionHeader(page, '5. Historia sprzedaży (12 miesięcy)', x, y);
   y -= LAYOUT.spacing.paragraph;
 
   // Check if we have data (already cleaned by sheets service)

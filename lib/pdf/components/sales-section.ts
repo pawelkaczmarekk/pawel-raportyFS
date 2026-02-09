@@ -9,6 +9,7 @@ export interface SalesData {
   allegreSk: number;
   allegroHu: number;
   suma: number;
+  obrot?: number;
   previousMonth?: number;
   previousYear?: number;
 }
@@ -30,7 +31,7 @@ export function renderSalesSection(
   let y = startY;
 
   // Section header
-  y = generator.drawSectionHeader(page, '3. Wartość sprzedaży', x, y);
+  y = generator.drawSectionHeader(page, '2. Wartość sprzedaży', x, y);
   y -= LAYOUT.spacing.paragraph;
 
   // Sales by country - grid layout
@@ -104,6 +105,38 @@ export function renderSalesSection(
   });
 
   y -= sumaBoxHeight + LAYOUT.spacing.paragraph;
+
+  // Obrót box (jeśli podano)
+  if (data.obrot !== undefined && data.obrot !== null) {
+    y -= LAYOUT.spacing.line;
+    const obrotBoxHeight = LAYOUT.table.headerHeight * 1.3;
+
+    page.drawRectangle({
+      x,
+      y: y - obrotBoxHeight,
+      width: LAYOUT.content.width,
+      height: obrotBoxHeight,
+      color: rgb(0.95, 0.95, 0.95),
+      borderColor: rgb(COLORS.primary.r, COLORS.primary.g, COLORS.primary.b),
+      borderWidth: 2,
+    });
+
+    generator.drawText(page, 'OBRÓT (PO ZWROTACH):', x + cellPadding, y - obrotBoxHeight / 2 - LAYOUT.fonts.body / 3, {
+      size: LAYOUT.fonts.body,
+      font: generator.getCondensedFont(),
+      color: COLORS.text.muted,
+    });
+
+    const obrotText = formatCurrency(data.obrot, 'PLN');
+    const obrotWidth = generator.getBoldFont().widthOfTextAtSize(obrotText, LAYOUT.fonts.subheading);
+    generator.drawText(page, obrotText, LAYOUT.page.width - LAYOUT.margin.right - obrotWidth - cellPadding, y - obrotBoxHeight / 2 - LAYOUT.fonts.subheading / 3, {
+      size: LAYOUT.fonts.subheading,
+      font: generator.getBoldFont(),
+      color: COLORS.text.heading,
+    });
+
+    y -= obrotBoxHeight + LAYOUT.spacing.paragraph;
+  }
 
   // Comparison with previous periods
   if (data.previousMonth !== undefined || data.previousYear !== undefined) {

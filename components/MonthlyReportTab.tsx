@@ -11,6 +11,7 @@ interface MonthlyReportTabProps {
 export default function MonthlyReportTab({ partners }: MonthlyReportTabProps) {
   const [selectedPartner, setSelectedPartner] = useState('');
   const [celMiesieczny, setCelMiesieczny] = useState('');
+  const [obrot, setObrot] = useState('');
   const [osiagniecia, setOsiagniecia] = useState('');
   const [wyzwania, setWyzwania] = useState('');
   const [plany, setPlany] = useState('');
@@ -35,6 +36,7 @@ export default function MonthlyReportTab({ partners }: MonthlyReportTabProps) {
         body: JSON.stringify({
           partnerName: selectedPartner,
           celMiesieczny: celMiesieczny ? parseFloat(celMiesieczny.replace(/\s/g, '').replace(',', '.')) : null,
+          obrot: obrot ? parseFloat(obrot.replace(/\s/g, '').replace(',', '.')) : null,
           osiagniecia,
           wyzwania,
           plany,
@@ -82,6 +84,7 @@ export default function MonthlyReportTab({ partners }: MonthlyReportTabProps) {
         // Reset form
         setSelectedPartner('');
         setCelMiesieczny('');
+        setObrot('');
         setOsiagniecia('');
         setWyzwania('');
         setPlany('');
@@ -134,6 +137,22 @@ export default function MonthlyReportTab({ partners }: MonthlyReportTabProps) {
             />
             <p className="mt-1 text-sm text-gray-500">
               Wpisz cel sprzedażowy na bieżący miesiąc. Raport podsumowuje poprzedni miesiąc, a cel zostanie zapisany dla aktualnego miesiąca.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Obrót uwzględniający zwroty i anulowane zamówienia (PLN)
+            </label>
+            <input
+              type="text"
+              value={obrot}
+              onChange={(e) => setObrot(e.target.value)}
+              placeholder="np. 120000 lub 120 000"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-400"
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              Obrót po uwzględnieniu zwrotów i anulowanych zamówień za poprzedni miesiąc.
             </p>
           </div>
 

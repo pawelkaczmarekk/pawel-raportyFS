@@ -31,7 +31,7 @@ export function renderDynamicsSection(
   let y = startY;
 
   // Section header
-  y = generator.drawSectionHeader(page, '5. Dynamika i realizacja celów', x, y);
+  y = generator.drawSectionHeader(page, '4. Dynamika i realizacja celów', x, y);
   y -= LAYOUT.spacing.paragraph;
 
   // Metrics grid - 4 columns for dynamics data

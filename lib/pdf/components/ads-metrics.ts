@@ -31,7 +31,7 @@ export function renderAdsMetrics(
   let y = startY;
 
   // Section header
-  y = generator.drawSectionHeader(page, '4. Metryki Allegro ADS', x, y);
+  y = generator.drawSectionHeader(page, '3. Metryki Allegro ADS', x, y);
   y -= LAYOUT.spacing.paragraph;
 
   // Metrics grid - 2 rows x 3 columns (5 metrics total)

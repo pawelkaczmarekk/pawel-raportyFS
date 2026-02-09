@@ -324,7 +324,7 @@ export function renderAISummary(
   const overflow: ContentBlock[] = [];
 
   // Section header
-  y = generator.drawSectionHeader(page, '2. Opis współpracy i rekomendacje', x, y);
+  y = generator.drawSectionHeader(page, '1. Opis współpracy i rekomendacje', x, y);
   y -= 10;
 
   if (!data.content || data.content.trim() === '') {

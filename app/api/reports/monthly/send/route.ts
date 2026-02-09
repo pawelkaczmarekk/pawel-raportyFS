@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
       userInput: userInput || {},
       dateRange: reportData.dateRange,
       celMiesieczny: reportData.celMiesieczny,  // Pass new month goal
+      obrot: reportData.obrot,  // Pass obrót value
       driveActionsSummary: reportData.driveActionsSummary || [],  // Pass Google Drive actions
     });
 
