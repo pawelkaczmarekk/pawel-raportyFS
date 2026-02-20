@@ -102,16 +102,10 @@ HTML:`;
   ): Promise<string> {
     const tasksSummary = this.formatTasksForAI(tasks);
 
-    // Calculate weekly progress
-    const celTygodniowy = partner.celTygodniowy || 0;
-    const sprzedazTygodniowa = (partner.suma / 30) * 7; // Approximate weekly from monthly
-    const progres = celTygodniowy > 0 ? ((sprzedazTygodniowa / celTygodniowy) * 100).toFixed(1) : '0';
-    const dynamika = sprzedazTygodniowa > celTygodniowy ? 'powyżej celu' : 'poniżej celu';
-
     // Build data section only with available information
     const dataLines = [
       `- Partner: ${partner.nazwaKonta}`,
-      `- Sprzedaż: ${Math.round(sprzedazTygodniowa).toLocaleString('pl-PL')} PLN (${progres}% celu)`,
+      `- Sprzedaż: ${partner.suma.toLocaleString('pl-PL')} PLN (${partner.realizacji}% celu)`,
       `- Dynamika M/M: ${partner.dynamikaMM}`,
       `- Realizacja miesięczna: ${partner.realizacji}%`,
     ];
