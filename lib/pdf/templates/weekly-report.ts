@@ -3,13 +3,11 @@ import { PDFGenerator } from '../pdf-generator';
 import { LAYOUT, fromTop } from '../utils/layout';
 import {
   renderHeader,
-  renderActionsSection,
   renderAISummary,
   renderAISummaryOverflow,
   renderSalesSection,
   renderAdsMetrics,
   renderDynamicsSection,
-  parseActions,
 } from '../components';
 import { sheetsService } from '@/lib/api/sheets';
 
@@ -39,7 +37,7 @@ function formatCurrentMonth(): string {
 }
 
 export async function generateWeeklyPDF(data: WeeklyPDFData): Promise<Buffer> {
-  const { partner, tasks, aiContent, userInput, driveActionsSummary } = data;
+  const { partner, aiContent } = data;
 
   // Ensure dateRange contains Date objects (may come as strings from JSON)
   const dateRange = {
@@ -59,25 +57,7 @@ export async function generateWeeklyPDF(data: WeeklyPDFData): Promise<Buffer> {
   const startY = fromTop(topOffset);
   let y = startY;
 
-  // === PAGE 1: Header + Actions + AI Summary ===
-
-  // Prepare actions for height calculation
-  const userActions = parseActions(userInput.wykonaneDzialania);
-  const clickupActions = tasks
-    .filter(t => t.status?.status?.toLowerCase().includes('complete') || t.status?.status?.toLowerCase().includes('closed'))
-    .map(t => t.name);
-
-  // Include Google Drive actions summary
-  const driveActions = driveActionsSummary || [];
-
-  const combinedActions = [...userActions, ...clickupActions, ...driveActions];
-  const actionsToRender = combinedActions;
-
-  // Estimate total page 1 content height for dynamic background
-  const headerHeight = LAYOUT.fonts.title * 1.5 + LAYOUT.fonts.subheading * 3 + LAYOUT.spacing.section * 2;
-  const actionsHeight = LAYOUT.fonts.heading * 1.5 + generator.estimateBulletListHeight(actionsToRender, LAYOUT.fonts.body, LAYOUT.content.width - 20) + LAYOUT.spacing.section;
-  const aiSummaryHeight = LAYOUT.fonts.heading * 1.5 + generator.estimateTextHeight(aiContent, LAYOUT.fonts.body, LAYOUT.content.width) + LAYOUT.spacing.section * 2;
-  const totalPage1Height = headerHeight + actionsHeight + aiSummaryHeight + LAYOUT.spacing.paragraph * 4;
+  // === PAGE 1: Header + AI Summary ===
 
   // 1. Header - use current month for weekly reports
   y = renderHeader(generator, page1, {
@@ -88,12 +68,7 @@ export async function generateWeeklyPDF(data: WeeklyPDFData): Promise<Buffer> {
     opiekun: partner.opiekun,
   }, y);
 
-  // 2. Actions section
-  y = renderActionsSection(generator, page1, {
-    actions: actionsToRender,
-  }, y);
-
-  // 3. AI Summary
+  // 2. AI Summary
   const aiResult = renderAISummary(generator, page1, {
     content: aiContent,
   }, y);
