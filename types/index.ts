@@ -1,5 +1,6 @@
 export interface Partner {
   opiekun: string;
+  partner: string;
   nazwaKonta: string;
   pakiet: string;
   allegroPl: number;
@@ -24,6 +25,7 @@ export interface Partner {
   zwrotZAdsPoprzedniMiesiac: number;
   zwrotZAds: number;
   oczekiwanyZwrotZAds: number;
+  zgodnosc: string;
   udzialAdsWPrzychodach: string;
   sumaProwizji: number;
   dopuszczalnaProwizja: number;
