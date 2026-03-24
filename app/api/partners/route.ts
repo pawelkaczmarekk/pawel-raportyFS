@@ -11,11 +11,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Use previous month tab which has the most recent partner data
-    const now = new Date();
-    const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const sheetName = `${String(previousMonth.getMonth() + 1).padStart(2, '0')}.${previousMonth.getFullYear()}`;
-
+    const sheetName = await sheetsService.getLatestSheetName();
     const partners = await sheetsService.getAllPartners(sheetName);
 
     console.log(`[Partners API] Total partners fetched: ${partners.length}`);

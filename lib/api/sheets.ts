@@ -109,9 +109,51 @@ export class SheetsService {
     }
   }
 
+  async getLatestSheetName(): Promise<string> {
+    try {
+      const response = await this.sheets.spreadsheets.get({
+        spreadsheetId: process.env.MAIN_SHEET_ID,
+        fields: 'sheets.properties.title',
+      });
+
+      const titles = (response.data.sheets || [])
+        .map((s: any) => s.properties?.title || '')
+        .filter((t: string) => /^\d{2}\.\d{4}$/.test(t));
+
+      if (titles.length === 0) {
+        const now = new Date();
+        return `${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`;
+      }
+
+      titles.sort((a: string, b: string) => {
+        const [aM, aY] = a.split('.').map(Number);
+        const [bM, bY] = b.split('.').map(Number);
+        return aY !== bY ? bY - aY : bM - aM;
+      });
+
+      console.log(`[SheetsService] Latest sheet found: ${titles[0]}`);
+      return titles[0];
+    } catch (error) {
+      console.error('Error fetching sheet list:', error);
+      const now = new Date();
+      return `${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`;
+    }
+  }
+
   async getPartnerByName(name: string, sheetName?: string): Promise<Partner | null> {
-    const partners = await this.getAllPartners(sheetName);
-    return partners.find((p) => p.nazwaKonta === name) || null;
+    const latestSheet = await this.getLatestSheetName();
+    const partners = await this.getAllPartners(latestSheet);
+    const partner = partners.find((p) => p.nazwaKonta === name) || null;
+
+    if (partner) return partner;
+
+    // Fallback: try the requested sheet if different from latest
+    if (sheetName && sheetName !== latestSheet) {
+      const fallbackPartners = await this.getAllPartners(sheetName);
+      return fallbackPartners.find((p) => p.nazwaKonta === name) || null;
+    }
+
+    return null;
   }
 
   getSheetNameForDate(date: Date): string {
