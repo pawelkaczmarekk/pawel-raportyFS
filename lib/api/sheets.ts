@@ -117,10 +117,11 @@ export class SheetsService {
       }
 
       const headers = allRows[0];
+      console.log(`[SheetsService] Sheet headers (first 10): ${headers.slice(0, 10).map((h: any) => `"${h}"`).join(', ')}`);
       const headerIndexMap = this.buildHeaderIndexMap(headers);
       const rows = allRows.slice(1); // Skip header row
 
-      console.log(`[SheetsService] Raw rows fetched: ${rows.length}, mapped headers: ${Object.keys(headerIndexMap).length}`);
+      console.log(`[SheetsService] Raw rows fetched: ${rows.length}, mapped headers: ${headerIndexMap.size}`);
 
       return rows.map((row) => this.mapRowToPartner(row, headerIndexMap));
     } catch (error) {
@@ -215,15 +216,47 @@ export class SheetsService {
   }
 
   private buildHeaderIndexMap(headers: any[]): Map<keyof Partner, number> {
+    // Build a normalized lookup: collapse whitespace, trim
+    const normalizedMapping = new Map<string, keyof Partner>();
+    for (const [header, field] of Object.entries(HEADER_TO_FIELD_MAPPING)) {
+      normalizedMapping.set(this.normalizeHeader(header), field);
+    }
+
     const map = new Map<keyof Partner, number>();
+    const unmatchedHeaders: string[] = [];
     for (let i = 0; i < headers.length; i++) {
-      const headerName = (headers[i] || '').toString().trim();
-      const fieldName = HEADER_TO_FIELD_MAPPING[headerName];
+      const rawHeader = (headers[i] || '').toString().trim();
+      if (!rawHeader) continue;
+
+      // Try exact match first
+      let fieldName = HEADER_TO_FIELD_MAPPING[rawHeader];
+
+      // Try normalized match
+      if (!fieldName) {
+        fieldName = normalizedMapping.get(this.normalizeHeader(rawHeader)) || undefined as any;
+      }
+
       if (fieldName) {
         map.set(fieldName, i);
+      } else {
+        unmatchedHeaders.push(rawHeader);
       }
     }
+
+    if (unmatchedHeaders.length > 0) {
+      console.log(`[SheetsService] Unmatched headers: ${unmatchedHeaders.join(' | ')}`);
+    }
+    console.log(`[SheetsService] Matched ${map.size} of ${Object.keys(HEADER_TO_FIELD_MAPPING).length} expected headers`);
+
     return map;
+  }
+
+  private normalizeHeader(header: string): string {
+    return header
+      .replace(/\s+/g, ' ')  // collapse multiple spaces
+      .trim()
+      .toUpperCase()
+      .replace(/[📈⏰]/g, '');  // remove emoji prefixes
   }
 
   private mapRowToPartner(row: any[], headerIndexMap: Map<keyof Partner, number>): Partner {
