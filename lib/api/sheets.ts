@@ -1,53 +1,64 @@
 import { google } from 'googleapis';
 import { Partner, PartnerAction } from '@/types';
 
-const SHEET_COLUMN_MAPPING = {
-  A: 'opiekun',
-  B: 'partner',
-  C: 'nazwaKonta',
-  D: 'pakiet',
-  E: 'allegroPl',
-  F: 'allegroCz',
-  G: 'allegreSk',
-  H: 'allegroHu',
-  I: 'suma',
-  J: 'allegroCzPl',
-  K: 'allegroSkPl',
-  L: 'allegroHuPl',
-  M: 'celDzienny',
-  N: 'celTygodniowy',
-  O: 'cel',
-  P: 'realizacji',
-  Q: 'progres',
-  R: 'dynamikaRR',
-  S: 'dynamikaMM',
-  T: 'trend2024',
-  U: 'trend2025',
-  V: 'kosztAds',
-  W: 'przychodAds',
-  X: 'zwrotZAdsPoprzedniMiesiac',
-  Y: 'zwrotZAds',
-  Z: 'oczekiwanyZwrotZAds',
-  AA: 'zgodnosc',
-  AB: 'udzialAdsWPrzychodach',
-  AC: 'sumaProwizji',
-  AD: 'dopuszczalnaProwizja',
-  AE: 'czasWysylki',
-  AF: 'iloscOfertZGnc',
-  AG: 'iloscWystawionychOfert',
-  AH: 'iloscZoptymalizowanychOfert',
-  AI: 'iloscWyroznionychOfert',
-  AJ: 'iloscOfertWStrefieOkazji',
-  AK: 'allegroDays',
-  AL: 'allegroDiamond',
-  AM: 'opiekunAds',
-  AN: 'raportAllegroAds',
-  AO: 'idSprzedawcy',
-  AP: 'dodatkoweInformacje',
-  AQ: 'zyskAllegro',
-  AR: 'opiekunFsEmail',
-  AS: 'opiekunAdsEmail',
+// Maps header names from the first row of the sheet to Partner field names
+const HEADER_TO_FIELD_MAPPING: Record<string, keyof Partner> = {
+  'Opiekun': 'opiekun',
+  'Partner': 'partner',
+  'Nazwa konta': 'nazwaKonta',
+  'Pakiet': 'pakiet',
+  'ALLEGRO PL': 'allegroPl',
+  'ALLEGRO CZ': 'allegroCz',
+  'ALLEGRO SK': 'allegreSk',
+  'ALLEGRO HU': 'allegroHu',
+  'SUMA': 'suma',
+  'ALLEGRO CZ/PL': 'allegroCzPl',
+  'ALLEGRO SK/PL': 'allegroSkPl',
+  'ALLEGRO HU/PL': 'allegroHuPl',
+  'CEL DZIENNY': 'celDzienny',
+  'CEL TYGODNIOWY': 'celTygodniowy',
+  'CEL': 'cel',
+  'REALIZACJI': 'realizacji',
+  'PROGRES': 'progres',
+  '📈DYNAMIKA R/R': 'dynamikaRR',
+  '📈DYNAMIKA M/M': 'dynamikaMM',
+  'TREND 2024r': 'trend2024',
+  'TREND 2025r': 'trend2025',
+  'KOSZT ADS (PLN)': 'kosztAds',
+  'PRZYCHÓD ADS (PLN)': 'przychodAds',
+  'ZWROT Z ADS  (PLN) POPRZEDNI MIESIĄC': 'zwrotZAdsPoprzedniMiesiac',
+  'ZWROT Z ADS': 'zwrotZAds',
+  'OCZEKIWANY ZWROT Z ADS': 'oczekiwanyZwrotZAds',
+  'ZGODNOŚĆ': 'zgodnosc',
+  'UDZIAŁ ADS W PRZYCHODACH': 'udzialAdsWPrzychodach',
+  'SUMA PROWIZJI': 'sumaProwizji',
+  'DOPUSZCZALNA PROWIZJA': 'dopuszczalnaProwizja',
+  '⏰CZAS WYSYŁKI': 'czasWysylki',
+  'ILOŚĆ OFERT Z GNC': 'iloscOfertZGnc',
+  'ILOŚĆ WYSTAWIONYCH OFERT': 'iloscWystawionychOfert',
+  'ILOŚĆ ZOPTYMALIZOWANYCH OFERT': 'iloscZoptymalizowanychOfert',
+  'ILOŚĆ  WYRÓŻNIONYCH OFERT': 'iloscWyroznionychOfert',
+  'ILOŚĆ OFERT W STREFIE OKAZJI': 'iloscOfertWStrefieOkazji',
+  'ALLEGRO DAYS': 'allegroDays',
+  'ALLEGRO DIAMOND': 'allegroDiamond',
+  'OPIEKUN ADS': 'opiekunAds',
+  'RAPORT ALLEGRO ADS': 'raportAllegroAds',
+  'ID Sprzedawcy': 'idSprzedawcy',
+  'DODATOWE INFORMACJE': 'dodatkoweInformacje',
+  'ZYSK ALLEGRO (TYLKO DLA PARTNERÓW VIP)': 'zyskAllegro',
+  'Opiekum FS (e-mail)': 'opiekunFsEmail',
+  'Opiekum ADS (e-mail)': 'opiekunAdsEmail',
 };
+
+const NUMERIC_FIELDS: Set<keyof Partner> = new Set([
+  'allegroPl', 'allegroCz', 'allegreSk', 'allegroHu', 'suma',
+  'allegroCzPl', 'allegroSkPl', 'allegroHuPl',
+  'celDzienny', 'celTygodniowy', 'cel', 'realizacji',
+  'kosztAds', 'przychodAds', 'zwrotZAdsPoprzedniMiesiac', 'zwrotZAds', 'oczekiwanyZwrotZAds',
+  'sumaProwizji', 'dopuszczalnaProwizja',
+  'iloscOfertZGnc', 'iloscWystawionychOfert', 'iloscZoptymalizowanychOfert',
+  'iloscWyroznionychOfert', 'iloscOfertWStrefieOkazji', 'zyskAllegro',
+]);
 
 export class SheetsService {
   private sheets;
@@ -96,14 +107,22 @@ export class SheetsService {
 
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: process.env.MAIN_SHEET_ID,
-        range: `'${sheetName}'!A2:AS`, // Use specific sheet tab and skip header row
+        range: `'${sheetName}'!A1:AZ`, // Include header row (row 1)
       });
 
-      const rows = response.data.values || [];
+      const allRows = response.data.values || [];
+      if (allRows.length < 2) {
+        console.warn(`[SheetsService] Sheet ${sheetName} has no data rows`);
+        return [];
+      }
 
-      console.log(`[SheetsService] Raw rows fetched: ${rows.length}`);
+      const headers = allRows[0];
+      const headerIndexMap = this.buildHeaderIndexMap(headers);
+      const rows = allRows.slice(1); // Skip header row
 
-      return rows.map((row) => this.mapRowToPartner(row));
+      console.log(`[SheetsService] Raw rows fetched: ${rows.length}, mapped headers: ${Object.keys(headerIndexMap).length}`);
+
+      return rows.map((row) => this.mapRowToPartner(row, headerIndexMap));
     } catch (error) {
       console.error('Error fetching partners from Google Sheets:', error);
       throw new Error('Failed to fetch partners data');
@@ -193,54 +212,33 @@ export class SheetsService {
     }
   }
 
-  private mapRowToPartner(row: any[]): Partner {
-    return {
-      opiekun: row[0] || '',
-      partner: row[1] || '',
-      nazwaKonta: row[2] || '',
-      pakiet: row[3] || '',
-      allegroPl: this.parseNumber(row[4]),
-      allegroCz: this.parseNumber(row[5]),
-      allegreSk: this.parseNumber(row[6]),
-      allegroHu: this.parseNumber(row[7]),
-      suma: this.parseNumber(row[8]),
-      allegroCzPl: this.parseNumber(row[9]),
-      allegroSkPl: this.parseNumber(row[10]),
-      allegroHuPl: this.parseNumber(row[11]),
-      celDzienny: this.parseNumber(row[12]),
-      celTygodniowy: this.parseNumber(row[13]),
-      cel: this.parseNumber(row[14]),
-      realizacji: this.parseNumber(row[15]),
-      progres: row[16] || '',
-      dynamikaRR: row[17] || '',
-      dynamikaMM: row[18] || '',
-      trend2024: row[19] || '',
-      trend2025: row[20] || '',
-      kosztAds: this.parseNumber(row[21]),
-      przychodAds: this.parseNumber(row[22]),
-      zwrotZAdsPoprzedniMiesiac: this.parseNumber(row[23]),
-      zwrotZAds: this.parseNumber(row[24]),
-      oczekiwanyZwrotZAds: this.parseNumber(row[25]),
-      zgodnosc: row[26] || '',
-      udzialAdsWPrzychodach: row[27] || '',
-      sumaProwizji: this.parseNumber(row[28]),
-      dopuszczalnaProwizja: this.parseNumber(row[29]),
-      czasWysylki: row[30] || '',
-      iloscOfertZGnc: this.parseNumber(row[31]),
-      iloscWystawionychOfert: this.parseNumber(row[32]),
-      iloscZoptymalizowanychOfert: this.parseNumber(row[33]),
-      iloscWyroznionychOfert: this.parseNumber(row[34]),
-      iloscOfertWStrefieOkazji: this.parseNumber(row[35]),
-      allegroDays: row[36] || '',
-      allegroDiamond: row[37] || '',
-      opiekunAds: row[38] || '',
-      raportAllegroAds: row[39] || '',
-      idSprzedawcy: row[40] || '',
-      dodatkoweInformacje: row[41] || '',
-      zyskAllegro: this.parseNumber(row[42]),
-      opiekunFsEmail: row[43] || '',
-      opiekunAdsEmail: row[44] || '',
+  private buildHeaderIndexMap(headers: any[]): Map<keyof Partner, number> {
+    const map = new Map<keyof Partner, number>();
+    for (let i = 0; i < headers.length; i++) {
+      const headerName = (headers[i] || '').toString().trim();
+      const fieldName = HEADER_TO_FIELD_MAPPING[headerName];
+      if (fieldName) {
+        map.set(fieldName, i);
+      }
+    }
+    return map;
+  }
+
+  private mapRowToPartner(row: any[], headerIndexMap: Map<keyof Partner, number>): Partner {
+    const get = (field: keyof Partner): any => {
+      const idx = headerIndexMap.get(field);
+      return idx !== undefined ? row[idx] : undefined;
     };
+
+    const partner = {} as Partner;
+    for (const field of Object.values(HEADER_TO_FIELD_MAPPING)) {
+      if (NUMERIC_FIELDS.has(field)) {
+        (partner as any)[field] = this.parseNumber(get(field));
+      } else {
+        (partner as any)[field] = get(field) || '';
+      }
+    }
+    return partner;
   }
 
   private parseNumber(value: any): number {
@@ -465,10 +463,29 @@ export class SheetsService {
 
       console.log(`[SheetsService] Updating goal for ${partnerName} in sheet ${sheetName}`);
 
-      // First, find the row number for the partner
+      // First, fetch headers to find the right columns dynamically
+      const headerResponse = await this.sheets.spreadsheets.values.get({
+        spreadsheetId: process.env.MAIN_SHEET_ID,
+        range: `'${sheetName}'!A1:AZ1`,
+      });
+
+      const headers = headerResponse.data.values?.[0] || [];
+      const headerIndexMap = this.buildHeaderIndexMap(headers);
+
+      const nazwaKontaIdx = headerIndexMap.get('nazwaKonta');
+      const celIdx = headerIndexMap.get('cel');
+
+      if (nazwaKontaIdx === undefined || celIdx === undefined) {
+        console.warn(`[SheetsService] Could not find required columns in sheet ${sheetName}`);
+        return false;
+      }
+
+      const nazwaKontaCol = this.indexToColumnLetter(nazwaKontaIdx);
+
+      // Find the row number for the partner
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: process.env.MAIN_SHEET_ID,
-        range: `'${sheetName}'!B2:B`, // Column B = nazwaKonta
+        range: `'${sheetName}'!${nazwaKontaCol}2:${nazwaKontaCol}`,
       });
 
       const rows = response.data.values || [];
@@ -486,8 +503,9 @@ export class SheetsService {
         return false;
       }
 
-      // Update column N (cel) for the found row
-      const updateRange = `'${sheetName}'!N${partnerRowIndex}`;
+      // Update cel column for the found row
+      const celCol = this.indexToColumnLetter(celIdx);
+      const updateRange = `'${sheetName}'!${celCol}${partnerRowIndex}`;
       console.log(`[SheetsService] Updating range ${updateRange} with value ${goal}`);
 
       await this.sheetsWrite.spreadsheets.values.update({
