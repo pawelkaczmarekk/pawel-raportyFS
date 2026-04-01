@@ -161,15 +161,17 @@ export class SheetsService {
   }
 
   async getPartnerByName(name: string, sheetName?: string): Promise<Partner | null> {
+    // If a specific sheet was requested, try it first
+    if (sheetName) {
+      const partners = await this.getAllPartners(sheetName);
+      const partner = partners.find((p) => p.nazwaKonta === name) || null;
+      if (partner) return partner;
+    }
+
+    // Fallback: try the latest sheet
     const latestSheet = await this.getLatestSheetName();
-    const partners = await this.getAllPartners(latestSheet);
-    const partner = partners.find((p) => p.nazwaKonta === name) || null;
-
-    if (partner) return partner;
-
-    // Fallback: try the requested sheet if different from latest
-    if (sheetName && sheetName !== latestSheet) {
-      const fallbackPartners = await this.getAllPartners(sheetName);
+    if (!sheetName || sheetName !== latestSheet) {
+      const fallbackPartners = await this.getAllPartners(latestSheet);
       return fallbackPartners.find((p) => p.nazwaKonta === name) || null;
     }
 
