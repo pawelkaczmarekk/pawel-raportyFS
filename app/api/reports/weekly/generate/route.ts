@@ -38,36 +38,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch ClickUp tasks
-    const tasks = await clickupService.getTasksByPartner(
-      partnerName,
-      dateRange.start,
-      dateRange.end
-    );
+    // ClickUp tasks - disabled until CLICKUP_API_KEY is configured
+    const tasks: any[] = [];
 
-    console.log(`[WeeklyReport-Generate] Fetched ${tasks.length} ClickUp tasks for ${partnerName}`);
+    console.log(`[WeeklyReport-Generate] ClickUp disabled, skipping tasks for ${partnerName}`);
 
-    // Fetch history changes from Google Drive
-    const driveFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+    // Google Drive history - disabled until GOOGLE_DRIVE_FOLDER_ID is verified
     let historiaZmian: HistoryChange[] = [];
     let topZmiany: TopChange[] = [];
-
-    if (driveFolderId) {
-      try {
-        historiaZmian = await googleDriveService.getHistoryChanges(
-          driveFolderId,
-          partnerName,
-          dateRange.start,
-          dateRange.end
-        );
-        topZmiany = googleDriveService.getTopChanges(historiaZmian, 5);
-        console.log(`[WeeklyReport-Generate] Fetched ${historiaZmian.length} history changes, ${topZmiany.length} top changes`);
-      } catch (error) {
-        console.warn('[WeeklyReport-Generate] Failed to fetch history changes from Drive:', error);
-      }
-    } else {
-      console.warn('[WeeklyReport-Generate] GOOGLE_DRIVE_FOLDER_ID not configured, skipping history changes');
-    }
 
     // Generate sales data for last 7 days
     const last7Days = getLastNDays(7);

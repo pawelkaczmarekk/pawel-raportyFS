@@ -45,46 +45,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch ClickUp tasks
-    const tasks = await clickupService.getTasksByPartner(
-      partnerName,
-      dateRange.start,
-      dateRange.end
-    );
+    // ClickUp tasks - disabled until CLICKUP_API_KEY is configured
+    const tasks: any[] = [];
 
-    // Fetch Google Drive history changes
+    // Google Drive history - disabled until GOOGLE_DRIVE_FOLDER_ID is verified
     let historiaDzialan = '';
     let driveActionsSummary: string[] = [];
-    const driveFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-
-    if (driveFolderId) {
-      try {
-        console.log(`[MonthlyReport-Generate] Fetching Google Drive history for ${partnerName}`);
-        const historyChanges = await googleDriveService.getHistoryChanges(
-          driveFolderId,
-          partnerName,
-          dateRange.start,
-          dateRange.end
-        );
-
-        if (historyChanges.length > 0) {
-          historiaDzialan = googleDriveService.formatChangesForAI(historyChanges);
-
-          // Create summary for PDF actions section
-          const topChanges = googleDriveService.getTopChanges(historyChanges, 10);
-          driveActionsSummary = topChanges.map(tc => tc.description);
-
-          console.log(`[MonthlyReport-Generate] Found ${historyChanges.length} history changes from Google Drive`);
-        } else {
-          console.log(`[MonthlyReport-Generate] No history changes found in Google Drive for ${partnerName}`);
-        }
-      } catch (error) {
-        console.error(`[MonthlyReport-Generate] Error fetching Google Drive history:`, error);
-        // Continue without Drive data
-      }
-    } else {
-      console.log(`[MonthlyReport-Generate] Google Drive folder not configured`);
-    }
 
     // Generate AI content
     const aiContent = await aiService.generateMonthlyReport(partner, tasks, {
