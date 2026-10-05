@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sheetsService } from '@/lib/api/sheets';
 import { clickupService } from '@/lib/api/clickup';
-import { geminiService } from '@/lib/api/gemini';
+import { aiService } from '@/lib/api/ai-service';
 import { googleDriveService } from '@/lib/api/google-drive';
 import { generateWeeklyReportEmail } from '@/lib/templates/email';
 import { getLast7DaysRange, getDayName, getLastNDays } from '@/lib/utils/dates';
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
 
     // Generate AI content with all data
     // Use formatChangesForAI for detailed history context
-    const aiContent = await geminiService.generateWeeklyReport(partner, tasks, {
+    const aiContent = await aiService.generateWeeklyReport(partner, tasks, {
       wykonaneDzialania,
       historiaZmian: googleDriveService.formatChangesForAI(historiaZmian),
       topZmiany: topZmiany.map(t => `${t.description} (${t.rodzaj})`).join('\n'),

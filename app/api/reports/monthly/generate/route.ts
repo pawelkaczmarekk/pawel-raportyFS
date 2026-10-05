@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sheetsService } from '@/lib/api/sheets';
 import { clickupService } from '@/lib/api/clickup';
-import { geminiService } from '@/lib/api/gemini';
+import { aiService } from '@/lib/api/ai-service';
 import { googleDriveService } from '@/lib/api/google-drive';
 import { generateMonthlyReportEmail } from '@/lib/templates/email';
 import { getPreviousMonthRange } from '@/lib/utils/dates';
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate AI content
-    const aiContent = await geminiService.generateMonthlyReport(partner, tasks, {
+    const aiContent = await aiService.generateMonthlyReport(partner, tasks, {
       osiagniecia,
       wyzwania,
       plany,

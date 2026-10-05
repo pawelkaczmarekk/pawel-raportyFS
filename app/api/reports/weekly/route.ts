@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sheetsService } from '@/lib/api/sheets';
 import { clickupService } from '@/lib/api/clickup';
-import { geminiService } from '@/lib/api/gemini';
+import { aiService } from '@/lib/api/ai-service';
 import { gmailService } from '@/lib/api/gmail';
 import { googleDriveService } from '@/lib/api/google-drive';
 import { generatePDFAttachmentEmail } from '@/lib/templates/email';
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate AI content with all data
-    const aiContent = await geminiService.generateWeeklyReport(partner, tasks, {
+    const aiContent = await aiService.generateWeeklyReport(partner, tasks, {
       wykonaneDzialania,
       historiaZmian: googleDriveService.formatChangesForReport(historiaZmian),
       topZmiany: topZmiany.map(t => `${t.description} (${t.rodzaj})`).join('\n'),
